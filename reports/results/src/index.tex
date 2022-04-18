@@ -1,0 +1,81 @@
+\section{Installation}
+Enzo depends on \href{https://hpc-tutorials.llnl.gov/mpi/}{MPI}, \href{https://www.hdfgroup.org/solutions/hdf5}{HDF5}, \href{https://github.com/hypre-space/hypre}{HYPRE}, \href{https://icl.utk.edu/papi/}{PAPI}, and \href{https://github.com/grackle-project/grackle}{Grackle}.
+
+First, I searched for the packages on \href{https://campuscluster.illinois.edu/resources/docs/user-guide/}{the User Guide} for the campus cluster. This explains how to acquire an MPI implementation: \texttt{module load mvapich2/2.3-gcc-7.2.0}.
+
+Second, I searched \texttt{module avail}. I found PAPI: \texttt{module load papi}.
+
+Third, I resorted to downloading and building from source. Grackle already had a build file for the UIUC campus, but I needed to modify it as such:
+
+\begin{minted}[fontsize=\footnotesize,breaklines]{diff}
+diff --git a/src/clib/Make.mach.uiuc-campus-gnu b/src/clib/Make.mach.uiuc-campus-gnu
+index ee17f2d..cf176fc 100644
+--- a/src/clib/Make.mach.uiuc-campus-gnu
++++ b/src/clib/Make.mach.uiuc-campus-gnu
+@@ -18,7 +18,7 @@ MACH_FILE  = Make.mach.uiuc-campus-gnu
+ # Install paths (local variables)
+ #-----------------------------------------------------------------------
+ 
+-LOCAL_HDF5_INSTALL = /projects/ncsa/grav/softwares/miniconda2
++LOCAL_HDF5_INSTALL = /home/grayson5/hdf5-1.12.1/hdf5
+ LOCAL_FC_INSTALL   = /usr/local/gcc-4.7.1/lib64
+ 
+ #-----------------------------------------------------------------------
+@@ -89,6 +89,6 @@ MACH_LIBS         = $(LOCAL_LIBS_HDF5) $(LOCAL_LIBS_MACH)
+ 
+-MACH_INSTALL_PREFIX = $(HOME)/local
++MACH_INSTALL_PREFIX = $(HOME)/grackle
+ MACH_INSTALL_LIB_DIR =
+ MACH_INSTALL_INCLUDE_DIR =
+ \end{minted}
+
+HDF5 I built with \texttt{CC=gcc ./configure \&\& make}. I don't need to \texttt{make install} because I don't have root permission on the login node. Therefore, I will build the software in my user directory and point Enzo to that location.
+
+I was unable to build HYPRE. The configure script fails with because it is unable to find symbols
+
+\begin{minted}[fontsize=\footnotesize,breaklines]{text}
+gcc -o conftest -g -O2   conftest.c   -L/usr/local/mpi/mvapich2/2.3/gcc/7.2.0/lib -L/usr/local/gcc/7.2.0/lib64/../lib64 -L/usr/local/gcc/7.2.0/lib/../lib64 -L/usr/local/gcc/7.2.0/lib/gcc/x86_64-pc-linux-gnu/7.2.0 -L/usr/local/gcc/7.2.0/lib/gcc/x86_64-pc-linux-gnu/7.2.0/../../../../lib64 -L/lib/../lib64 -L/usr/lib/../lib64 -L/usr/local/gcc/7.2.0/lib64 -L/usr/local/gcc/7.2.0/lib -L/usr/local/gcc/7.2.0/lib/gcc/x86_64-pc-linux-gnu/7.2.0/../../.. -lmpifort -lmpi -lgfortran -lm -lquadmath >&5
+/usr/.../libmpi.so: undefined reference to `ibv_modify_xrc_rcv_qp@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_unreg_xrc_rcv_qp@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_open_xrc_domain@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_create_xrc_srq@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_close_xrc_domain@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_reg_xrc_rcv_qp@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_create_xrc_rcv_qp@IBVERBS_1.1'
+collect2: error: ld returned 1 exit status
+\end{minted}
+
+It seems these symbols come from \texttt{libibverbs}, which is a library for interacting with InfiniBand technology. This is specific to the particular hardware manufacturer (e.g. \href{https://www.ibm.com/docs/en/aix/7.2?topic=ofed-libibverbs-library}{IBM version}, \href{https://github.com/gpudirect/libibverbs}{Mellanox version}). I don't know how the Campus Cluster is put together. The Campus Cluster User Guide mentions InfiniBand, but it doesn't explain how to use it.
+
+I tried installing the Mellanox version of libibverbs, which requires \href{https://www.infradead.org/~tgr/libnl/}{libnl}. I installed \texttt{libnl} with \texttt{./configure --prefix=\${PWD} \&\& make -j \&\& make install -j}. However, I still couldn't build \texttt{libibverbs} because the \texttt{./configure.sh} script coulnd't detect \texttt{libnl}, despite my setting environment variables. \texttt{LDFLAGS=-L\${HOME}/libnl-3.2.25/lib CFLAGS=-I\${HOME}/libnl-3.2.25/include ./configure} did not help.
+
+I tried building Enzo, to see how far I could get without having HYPRE. I based the Enzo build configuration for the Campus Cluster on the build configuration for Ubuntu with the following changes:
+
+\inputminted[fontsize=\footnotesize,breaklines]{diff}{/home/sam/box/astro/project/code/diff}. Enzo also depends on symbols from \texttt{libibverbs}.
+
+\begin{minted}[fontsize=\footnotesize,breaklines]{text}
+[grayson5@golubh4 enzo]$ make machine-campuscluster
+# lots of output
+
+[grayson5@golubh4 enzo]$ make -j
+# lots of output
+Linking enzo executable. Type  cat out.compile  in case it fails.
+
+[grayson5@golubh4 enzo]$ cat out.compile
+/usr/.../libmpi.so: undefined reference to `ibv_reg_xrc_rcv_qp@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_close_xrc_domain@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_unreg_xrc_rcv_qp@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_open_xrc_domain@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_modify_xrc_rcv_qp@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_create_xrc_rcv_qp@IBVERBS_1.1'
+/usr/.../libmpi.so: undefined reference to `ibv_create_xrc_srq@IBVERBS_1.1'
+collect2: error: ld returned 1 exit status
+\end{minted}
+
+\subsection{Thoughts on resolution}
+
+I will email the \texttt{help@campuscluster.illinois.edu} to ask about how to install/use InfiniBand on the Campus Cluster.
+
+\section{Data}
+
+As such, I couldn't actually produce any data initially. However, I made progress in other ways: I found the code for the paper I want to replicate \href{https://github.com/dschaurecker/dl_halo}{here}. It is written for Arepo/Illustris, which I want to switch to Enzo in my replication study. As such, I have begun adapting that code for Enzo \href{https://github.com/charmoniumQ/dl_halo}{here}.

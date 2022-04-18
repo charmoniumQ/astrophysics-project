@@ -1,0 +1,95 @@
+\section*{Physics}
+
+\subsection*{Illustris and \textsc{AREPO}}
+
+Illustris dataset\cite{nelson_illustris_2015,vogelsberger_introducing_2014} uses the \textsc{AREPO} solver, which evolves the fluid quantities according to the ``hyperbolic conservation laws of ideal hydrodynamics:''\cite{springel_e_2010}
+
+\begin{tabular}{rl}
+  \toprule
+  State vector &
+  \(\vb{U} = \mqty(\rho \\ \rho \vb{v} \\ \rho E)\) \\
+  Flux &
+  \(\vb{F}(\vb{U}) = \mqty(\rho \vb{v} \\ \rho \vb{v} \vb{v}^T + P \\ (\rho E + P) \vb{v})\) \\
+  RHS &
+  \(\vb{W} = \mqty(0 \\ -\frac{\dot{a}}{a} \rho \vb{v} - \frac{\rho}{a^2} \grad \phi \\ -2 \frac{\dot{a}}{a\rho E} - \frac{\rho \vb{v}}{a^2}\grad \phi \\)\) \\
+  Evolution with time &
+  \(\pdv{\vb{U}}{t} + \frac{1}{a} \div{\vb{F}} = \vb{W}\) \\
+  Equation of state &
+  \(P = (\gamma - 1) u\) \\
+  Energy
+  & \(E = u + \frac{1}{2} \rho v^2\) \\
+  Gravitational potential & \(\grad^2 \phi = \frac{4 \pi G}{a} \rho_{\mathrm{total}} - \rho_0\) \\
+\bottomrule
+\end{tabular}
+
+where \(\rho\) is the density field, \(\rho_0\) is the mean density field, \(\vb{v}\) is the velocity vector field, \(P\) is the pressure field, \(u\) is the internal energy field, \(a\) is the cosmological expansion constant, \(G\) is the gravitational constant, and \(\gamma\) is the ratio of specific heats, on an unstructured, moving, Voronoi tessellation mesh \cite{springel_e_2010}. \textsc{AREPO} is second order in space and second order in time, due to hierarchical adaptive time-stepping \cite{nelson_illustris_2015}.
+
+\textsc{AREPO} uses Godunov's method in a MUSCL-Hancock scheme to solve these equations \cite{springel_e_2010}. The MUSCL-Hancock scheme is ``a slope-limited piece-wise linear reconstruction step within each cell, a first-order prediction step for the evolution over half a time-step, and finally a Riemann solver to estimate the time-averaged inter-cell fluxes for the time-step''\cite{van_leer_relation_1984,van_leer_upwind_2012}. Note that since the mesh is not cartesian, \textsc{AREPO} cannot employ operator splitting \cite{strang_construction_1968}.
+
+\textsc{AREPO} uses Tree-PM (particle mesh) approach for computing self-gravity. Long-range forces are calculated using the Fourier particle-mesh method while short-range forces are computed with a hierarchical tree algorithm \cite{nelson_illustris_2015}.
+
+The Illustris simulation further use Monte Carlo tracer particle scheme described in \cite{genel_following_2013}.
+
+The Illustris initial conditions are set by running CAMB \cite{seljak_line--sight_1996} using parameters found in the Wilkinson Anisotropy probe \cite{hinshaw_nine-year_2013} or RECFAST \cite{seager_new_1999} (see \Cref{initial-conditions}).
+
+\begin{table}[h]
+\begin{tabular}{rl}
+  \toprule
+  \(\Omega_m\) & 0.2726 \\
+  \(\Omega_\Lambda\) & 0.7274 \\
+  \(\Omega_b\) & 0.0456 \\
+  \(\sigma_8\) & 0.809 \\
+  \(n_s\) & 0.963 \\
+  \(H_0\) & 100 h km / sec Mpc \\
+  \(h\) & 0.704 \\
+  \(T(z = 157)\) & 245 K \\
+  \bottomrule
+\end{tabular}
+\caption{Initial conditions for CAMB.}
+\label{initial-conditions}
+\end{table}
+
+\subsection*{Enzo}
+
+Enzo \cite{oshea_introducing_2004,bryan_enzo_2014} solves the magneto-hydrodynamics problem, in contrast to Illustris/\textsc{AREPO} which ignore magnetism. Enzo evolves the ``equations of ideal magnetohydrodynamics (MHD) including gravity, in a coordinate systems comoving with the cosmological expansion:''
+
+\begin{tabular}{rl}
+  \toprule
+  State vector &
+  \(\vb{U} = \mqty(\rho \\ \rho \vb{v} \\ \rho E)\) \\
+  Flux &
+  \(
+  \vb{F}(\vb{U}) = \mqty(
+  \rho \vb{v} \\
+  \rho \vb{v} \vb{v}^T + P + \frac{B^2}{2a} - \frac{\vb{B} \vb{B}}{a} \\
+  (\rho E + P + \frac{B^2}{2a}) \vb{v} - \frac{1}{a} \vb{B}(\vb{B} \cdot \vb{v}) \\
+  )\) \\
+  RHS & \(\vb{W} = \mqty(0 \\ -\frac{\dot{a}}{a} \rho \vb{v} - \frac{1}{a} \rho \grad \phi \\ -\frac{\dot{a}}{a} \qty(2 u - E - \frac{B^2}{2a}) - \frac{\rho}{a} \vb{v} \dot \grad \phi - \Lambda  + \Gamma + \frac{1}{a^2} \div{\vb{F}_{\mathrm{cond}}})\) \\
+  Evolution with time &
+  \(\pdv{\vb{U}}{t} + \frac{1}{a} \div{\vb{F}} = \vb{W}\) \\
+  Equation of state &
+  \(P = (\gamma - 1) u\) \\
+  Energy
+  & \(E = u + \frac{1}{2} \rho \vb{v}^2 + \frac{B^2}{2a}\) \\
+  Maxwell's Equations & \(\pdv{\vb{B}}{t} - \frac{1}{a} \curl{(\vb{v} \cross \vb{B})} = 0\) \\
+  Gravitational potential & \(\grad^2 \phi = \frac{4 \pi G}{a} \rho_{\mathrm{total}} - \rho_0\) \\
+\bottomrule
+\end{tabular}
+
+where the variables are the same as in Illustris, but with magnetic vector field \(\vb{B}\), radiative cooling \(\Lambda\), radiative heating \(\Gamma\), and thermal heat conduction \(\vb{F}_{\mathrm{cond}}\). However, the situation I am simulating lacks a magnetic field anyway, so the extra magnetic capabilities won't matter. These equations are simulated on a  structured grid with adaptive mesh refinement \cite{bryan_enzo_2014}. Enzo takes adaptive timesteps. The order of accuracy depends on the spatial solver used in Enzo.
+
+For a spatial solver, Enzo can use:
+\begin{enumerate}
+\item the hydrodynamic-only piecewise parabolic method (PPM) \cite{colella_piecewise_1984,bryan_piecewise_1995},
+\item the MUSCL-like Godunov scheme \cite{van_leer_relation_1984,van_leer_upwind_2012},
+\item a constrained transport (CT) staggered MHD scheme \cite{collins_cosmological_2010},
+\item the second-order finite difference hydro-dynamics method described in ZEUS \cite{stone_zeus-2d_1992,stone_zeus-2d_1992-1}
+\end{enumerate}
+
+Enzo uses cloud-in-cell (CIC) at half-time steps and the Fourier method to compute the gravitational field.
+
+Enzo can also simulate Lagrangian ``trace particles'' using kick-drift-kick update.
+
+\subsection*{Applicability}
+
+I am mostly not deciding which class of solvers to use, because I am wanting to reuse the neural network in \cite{schaurecker_super-resolving_2021} trained on Illustris data. Thus I am bound by the choices that Schaurecker et al. made in \cite{schaurecker_super-resolving_2021} and Nelson et al. in \cite{nelson_illustris_2015,vogelsberger_introducing_2014}. One in particular, Schaurecker chose to simulate dark-matter only. This is a coarser understanding of the universe, but it will be easier to process in a neural network.

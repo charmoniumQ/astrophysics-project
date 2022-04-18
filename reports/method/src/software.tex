@@ -1,0 +1,64 @@
+\section*{Software}
+
+Last time, I had difficulty installing the code on the campus cluster. I was getting errors indicating the linker could not find libiverbs, despite it being referenced by the MPICH code I was trying to compile. This doesn't make sense because I activated the \texttt{module} for MPICH, which should have brought all of the relevant libraries into the linker's path, but I guess not.
+
+I decided to use the Spack package manager\cite{gamblin_spack_2015} instead of installing Enzo from source.
+There is already a package for Enzo\footnote{The package can be found at \url{https://spack.readthedocs.io/en/latest/package_list.html\#enzo}.}, so Spack knows what libraries Enzo depends on and how to build them on supported platforms. There is no need to look up each dependency individually, download it, learn how to compile it, compile it, add it to the system path, and change the configuration file of other programs to find it. One can reproduce this work by:
+
+\begin{minted}[fontsize=\scriptsize,breaklines]{shell}
+$ # See https://spack.readthedocs.io/en/latest/getting_started.html#shell-support
+$ # Download Spack
+$ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
+
+$ # Activate Spack's environment to add it to the path.
+$ # See the documentation for other shells.
+$ . spack/share/spack/setup-env.sh
+$ echo '. spack/share/spack/setup-env.sh' >> .bashrc
+
+$ # Now we actually install Enzo.
+$ spack install enzo
+$ # This build takes 20 minutes, because Spack has to bootstrap itself
+$ # and then build Enzo's dependencies from source.
+$ spack load enzo
+$ enzo_dir=$(dirname $(dirname $(which enzo)))
+
+$ # Now I will run Enzo on a test problem.
+$ # I will use the Sedov Blast problem, because I know what to expect.
+$ rm -rf $HOME/data
+$ mkdir $HOME/data
+$ enzo -d $enzo_dir/run/Hydro/Hydro-2D/SedovBlast/SedovBlast.enzo
+
+$ # Now that I know this invocation works on a single node, I will try it in SLURM.
+$ rm -rf $HOME/data
+$ mkdir $HOME/data
+$ sbatch \
+  --time=0-00:08:00           --chdir=$HOME/data          \
+  --ntasks=1                  --cpus-per-task=1           \
+  --job-name=test             --partition=eng-instruction \
+  --output=$HOME/data/stdout  --error=$HOME/data/stderr   \
+  --wrap="mpirun enzo -d $enzo_dir/run/Hydro/Hydro-2D/SedovBlast/SedovBlast.enzo"
+$ # Wait for the job to finish
+$ watch --differences --interval 2 -- squeue --user $USER
+$ # Check the status
+$ tail stderr
+...
+Successful run, exiting.
+
+$ # Visualize the data
+$ pip install yt h5py
+$ yt plot DD0001/sb_0001
+$ yt plot DD0007/sb_0007
+$ # View the data in data/frames/sb_000{1,7}_Slice_z_density.png
+\end{minted}
+
+You should see figures similar to those in \Cref{sedov-blast}.
+
+\begin{figure}[h]
+\includegraphics[width=0.45\textwidth]{../../data/frames/sb_0001_Slice_z_density.png}
+\includegraphics[width=0.45\textwidth]{../../data/frames/sb_0003_Slice_z_density.png}
+
+\includegraphics[width=0.45\textwidth]{../../data/frames/sb_0006_Slice_z_density.png}
+\includegraphics[width=0.45\textwidth]{../../data/frames/sb_0012_Slice_z_density.png}
+\caption{A Sedov blast at 0.01, 0.03, 0.06, and 0.12 seconds after detonation.}
+\label{sedov-blast}
+\end{figure}

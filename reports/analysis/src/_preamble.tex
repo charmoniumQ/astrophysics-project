@@ -1,0 +1,52 @@
+\documentclass{article}
+
+\newcommand{\mytitle}{Superresolution of Dark Matter Halos}
+
+\usepackage[sc]{mathpazo} % Use the Palatino font
+\linespread{1.05} % Line spacing - Palatino needs more space between lines
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+
+\usepackage[english]{babel} % Language hyphenation and typographical rules
+\usepackage[hang, small, labelfont=bf, up, textfont=it, up]{caption} % Custom captions under/above floats in tables or figures
+\usepackage{booktabs} % Horizontal rules in tables
+\usepackage{lineno}
+\usepackage{graphicx}
+\usepackage{physics}
+\usepackage{lastpage}
+
+\usepackage[colorlinks=true]{hyperref} % For hyperlinks in the PDF
+\hypersetup{pdftitle={\mytitle}}
+
+\usepackage{cleveref} % must be after hyperref
+
+\usepackage{enumitem} % Customized lists
+\setlist[itemize]{noitemsep} % Make itemize lists more compact
+
+\usepackage{fancyhdr}
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead[C]{\mytitle}
+\fancyhead[R]{\thepage\ of \pageref{LastPage}}
+\fancyhead[L]{}
+\fancyfoot[C]{}
+\fancyfoot[R]{}
+\fancyfoot[L]{}
+
+\usepackage{biblatex}
+\addbibresource{main.bib}
+
+\newcommand{\todo}[1]{\textcolor{red}{#1}}
+
+\usepackage{titling}
+\setlength{\droptitle}{-6\baselineskip} % Move the title up
+\pretitle{\begin{center}\huge\bfseries}
+\posttitle{\end{center}}
+\title{\mytitle}
+\author{%
+\textsc{Samuel Grayson} \\
+\normalsize \href{mailto:grayson5@illinois.edu}{\texttt{grayson5@illinois.edu}}%
+}
+\date{\today} % Leave empty to omit a date
+\begin{document}
+\maketitle
+%\linenumbers

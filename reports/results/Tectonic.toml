@@ -1,0 +1,8 @@
+[doc]
+name = 'results'
+bundle = 'https://data1.fullyjustified.net/tlextras-2020.0r0.tar'
+
+[[output]]
+shell_escape = true
+name = 'default'
+type = 'pdf'
