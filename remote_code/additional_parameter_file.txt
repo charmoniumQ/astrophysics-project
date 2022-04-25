@@ -1,0 +1,96 @@
+##############################################################################
+# Hydro parameters
+##############################################################################
+
+CosmologySimulationUseMetallicityField = 1 # on
+# Setting CosmologySimulationUseMetallicityField to 1 will create an additional tracer field for following metals. This is handy for simulations with star formation and feedback.
+# https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#cosmology
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L29
+
+BaryonSelfGravityApproximation = 1 # on
+# BaryonSelfGravityApproximation controls whether gravity for baryons is determined by a quick and reasonable approximation. It should be left on (1) in most cases.
+# https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#gravity-and-particle-parameters
+
+HydroMethod = 0 # PPM DE (a direct-Eulerian version of PPM)
+# The most fundamental hydro parameter that you can set is HydroMethod, which lets you decide between the Piecewise Parabolic Method (aka PPM; option 0), or the finite-difference method used in the Zeus astrophysics code (option 2). PPM is the more advanced and optimized method.
+# https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#adiabatic-hydrodynamics-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L67
+
+DualEnergyFormalism = 1 # on
+# When using PPM in a cosmological simulation, it is important to turn DualEnergyFormalism on (1), which makes total-energy schemes such as PPM stable in a regime where there are hypersonic fluid flows, which is quite common in cosmology.
+# https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#adiabatic-hydrodynamics-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L70
+
+PPMDiffusionParameter = 0 # off
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L69
+
+InterpolationMethod = 1 # SecondOrderA
+# The names specify (in at least a rough sense) the order of the leading error term for a spatial Taylor expansion, as well as a letter for possible variants within that order... The second one [zero-indexed] (SecondOrderA) is the workhorse: it's only problem is that it is not always symmetric.
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#hydrodynamics-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L71
+
+FluxCorrection = 1 # on
+# Strictly speaking this should always be used, but we have found it to lead to a less accurate solution for cosmological simulations because of the relatively sharp density gradients involved. However, it does appear to be important when radiative cooling is turned on and very dense structures are created.
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#hydrodynamics-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L61
+
+ConservativeInterpolation = 1 # on
+# Ideally, this should be done, but it can cause problems when strong density gradients occur.
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#hydrodynamics-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L62
+
+CourantSafetyNumber = 0.5
+# This is the maximum fraction of the CFL-implied timestep that will be used to advance any grid. A value greater than 1 is unstable (for all explicit methods).
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#hydrodynamics-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L63
+
+ParticleCourantSafetyNumber = 0.8
+# This somewhat strangely named parameter is the maximum fraction of a cell width that a particle is allowed to travel per timestep (i.e. it is a constant on the timestep somewhat along the lines of it's hydrodynamic brother).
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#particle-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L64
+
+UseMinimumPressureSupport = 0
+# When radiative cooling is turned on, and objects are allowed to collapse to very small sizes so that their Jeans length is no longer resolved, then they may undergo artificial fragmentation and angular momentum non-conservation. To alleviate this problem, as discussed in more detail in Machacek, Bryan & Abel (2001), a very simple fudge was introduced: if this flag is turned on, then a minimum temperature is applied to grids with level == MaximumRefinementLevel. This minimum temperature is that required to make each cell Jeans stable multiplied by the parameter below. More precisely, the temperature of a cell is set such that the resulting Jeans length is the square-root of the parameter MinimumPressureSupportParameter. So, for the default value of 100 (see below), this insures that the ratio of the Jeans length/cell size is at least 10.
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#minimum-pressure-support-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L65
+
+##############################################################################
+# AMR parameters
+##############################################################################
+
+StaticHierarchy = 0
+# The most fundamental AMR parameter is StaticHierarchy. When this is on (1), the code is a unigrid code. When it is off (0), adaptive mesh is turned on.
+# https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#amr-hierarchy-control-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L70
+
+MaximumRefinementLevel = 6
+# MaximumRefinementLevel determines how many possible levels of refinement a given simulation can attain
+# https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#amr-hierarchy-control-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L71
+
+MaximumGravityRefinementLevel = 6
+# MaximumGravityRefinementLevel defines the maximum level at which gravitational accelerations are computed. More highly refined levels have their gravitational accelerations interpolated from this level, which effectively provides smoothing of the gravitational force on the spatial resolution of the grids at MaximumGravityRefinementLevel.
+# https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#amr-hierarchy-control-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L72
+
+MaximumParticleRefinementLevel = 6
+# This is the level at which the dark matter particle contribution to the gravity is smoothed. This works in an inefficient way (it actually smoothes the particle density onto the grid), and so is only intended for highly refined regions which are nearly completely baryon dominated. It is used to remove the discreteness effects of the few remaining dark matter particles. Not used if set to a value less than 0.
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#general-gravity-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L73
+
+CellFlaggingMethod = 2 4 # Refine by baryon mass (2) and particle mass (4)
+# The method(s) used to specify when a cell should be refined. This is a list of integers, up to 9, as described by the following table. The methods combine in an "OR" fashion: if any of them indicate that a cell should be refined, then it is flagged. For cosmology simulations, methods 2 and 4 are probably most useful.
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#hierarchy-control-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L75
+
+MinimumOverDensityForRefinement = 8.0 8.0
+# For CelLFlaggingMethod = 2 and 4, the value is the density (baryon or particle), in code units, above which refinement occurs.
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#hierarchy-control-parameters
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L76
+
+##############################################################################
+# Other parameters
+##############################################################################
+
+#GreensFunctionMaxNumber = 40
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L83

@@ -1,0 +1,2 @@
+cluster:/home/grayson5/project
+--verbose --exclude=.git/ --exclude=remote_code/.spack-env/ --exclude=remote_code/.mypy_cache/ --exclude=remote_code/__pycache__/ --exclude=remote_code/data/
