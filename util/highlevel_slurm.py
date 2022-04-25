@@ -120,42 +120,47 @@ Read the code for more details.
 """
 
 from __future__ import annotations
-from typing import ContextManager, Generator, Type, Hashable, Optional, Sequence, Union, cast
-import contextlib
-import io
+
 import asyncio
-import shlex
+import contextlib
+import datetime
+import io
 import logging
+import shlex
 import time
 from dataclasses import dataclass
-from typing import Tuple, Sequence, Union
-import datetime
 from pathlib import Path
+from typing import (ContextManager, Generator, Hashable, Optional, Sequence,
+                    Tuple, Type, Union, Any, cast)
 
-from util import strptimedelta, strftimedelta, PersistentObject
+import bitmath  # type: ignore
 import invoke  # type: ignore
-import bitmath # type: ignore
+
+from .util import PersistentObject, strftimedelta, strptimedelta
 
 logger = logging.getLogger(__name__)
-_allocation_cache_manager = PersistentObject[dict[Hashable, Tuple[datetime.timedelta, bitmath.Bitmath]]]({}, "allocation_cache.pkl")
+_allocation_cache_manager = PersistentObject[
+    dict[Hashable, Tuple[datetime.timedelta, bitmath.Bitmath]]
+]({}, "allocation_cache.pkl")
 _state_mapping = {
     "BOOT_FAIL": "failed",
     "CANCELLED": "failed-retry",
     "COMPLETED": "success",
     "DEADLINE": "failed",
-    "FAILED" : "failed",
+    "FAILED": "failed",
     "NODE_FAIL": "failed-retry",
     "OUT_OF_MEMORY": "failed-mem",
     "PENDING": "waiting",
     "PREEMPTED": "failed-retry",
-    "RUNNING" : "waiting",
+    "RUNNING": "waiting",
     "REQUEUED": "waiting",
     "RESIZING": "waiting",
     "REVOKED": "failed",
-    "SUSPENDED" : "failed",
+    "SUSPENDED": "failed",
     "TIMEOUT": "failed-time",
     "": "waiting",
 }
+
 
 @dataclass
 class SlurmJob:
@@ -167,25 +172,23 @@ class SlurmJob:
 
     def read_stdout(self) -> str:
         if self._stdout is None:
-            raise RuntimeError("I don't know where stdout for this job is; pass it with SlurmJob(..., stdout=...)")
-        file = io.BytesIO()
-        self._runner.get(self._stdout, file)
-        result = file.getvalue()
-        try:
-            return result.decode()
-        except UnicodeDecodeError as e:
-            raise RuntimeError(f"{self._stdout} contains non-unicode data") from e
+            raise RuntimeError(
+                "I don't know where stdout for this job is; pass it with SlurmJob(..., stdout=...)"
+            )
+        if self._stdout.exists():
+            return self._stdout.read_text()
+        else:
+            return ""
 
     def read_stderr(self) -> str:
         if self._stderr is None:
-            raise RuntimeError("I don't know where stderr for this job is; pass it with SlurmJob(..., stderr=...)")
-        file = io.BytesIO()
-        self._runner.get(self._stderr, file)
-        result = file.getvalue()
-        try:
-            return result.decode()
-        except UnicodeDecodeError as e:
-            raise RuntimeError(f"{self._stderr} contains non-unicode data") from e
+            raise RuntimeError(
+                "I don't know where stderr for this job is; pass it with SlurmJob(..., stderr=...)"
+            )
+        if self._stderr.exists():
+            return self._stderr.read_text()
+        else:
+            return ""
 
     def _get_sacct_field(self, field: str) -> str:
         stdout = self._runner.run(
@@ -242,28 +245,34 @@ class SlurmJob:
         return bitmath.KiB(max(values)) if values else None
 
     def run_to_completion(
-        self,
-        wait_time: datetime.timedelta = datetime.timedelta(seconds=15),
+        self, wait_time: datetime.timedelta = datetime.timedelta(seconds=15),
     ) -> str:
         """Wait for the job to complete or fail."""
         status = "waiting"
-        logger.info("Slurm job %d: checking sacct every %.1fs", self.job_id, wait_time.total_seconds())
+        logger.info(
+            "Slurm job %d: checking sacct every %.1fs",
+            self.job_id,
+            wait_time.total_seconds(),
+        )
         while status == "waiting":
             time.sleep(wait_time.total_seconds())
             status = self.status
         return status
 
     async def async_run_to_completion(
-            self,
-            wait_time: datetime.timedelta = datetime.timedelta(seconds=15),
-        ) -> str:
-            """Wait for the job to complete or fail."""
-            status = "waiting"
-            logger.info("Slurm job %d: checking sacct every %.1fs", self.job_id, wait_time.total_seconds())
-            while status == "waiting":
-                await asyncio.sleep(wait_time.total_seconds())
-                status = self.status
-            return status
+        self, wait_time: datetime.timedelta = datetime.timedelta(seconds=15),
+    ) -> str:
+        """Wait for the job to complete or fail."""
+        status = "waiting"
+        logger.info(
+            "Slurm job %d: checking sacct every %.1fs",
+            self.job_id,
+            wait_time.total_seconds(),
+        )
+        while status == "waiting":
+            await asyncio.sleep(wait_time.total_seconds())
+            status = self.status
+        return status
 
     @contextlib.contextmanager
     def ensure_termination(self) -> Generator[None, None, None]:
@@ -314,37 +323,56 @@ class SlurmJob:
         Slurm's job array are superfluous.
 
         """
-        memory2 = memory if isinstance(memory, bitmath.Bitmath) else bitmath.parse_string(memory)
+        memory2 = (
+            memory
+            if isinstance(memory, bitmath.Bitmath)
+            else bitmath.parse_string(memory)
+        )
         if stdout is None:
-            stdout = Path() / "slurm-%j.out"
+            stdout = Path(runner, Path() / "slurm-%j.out")
         if stderr is None:
-            stderr = Path() / "slurm-%j.out"
+            stderr = Path(runner, Path() / "slurm-%j.out")
         stdout.parent.mkdir(exist_ok=True)
         stderr.parent.mkdir(exist_ok=True)
         possibly_slurm_script = Path(cast(Union[str, Path], command[0]))
-        is_slurm_script = possibly_slurm_script.exists() and possibly_slurm_script.read_text().startswith("#!")
+        is_slurm_script = possibly_slurm_script.exists() and possibly_slurm_script.read_text().startswith(
+            "#!"
+        )
         command2 = list(map(str, command))
-        proc = runner.run(shlex.join([
-            "sbatch",
-            *([f"--time={strftimedelta(walltime, '%D-%H:%M:%S')}"] if walltime else []),
-            f"--chdir={(cwd if cwd else Path())!s}",
-            f"--ntasks={ntasks}",
-            f"--cpus-per-task={cpus_per_task}",
-            f"--gpus-per-task={gpus_per_task}",
-            *([f"--job-name={job_name}"] if job_name else []),
-            *([f"--partition={partition}"] if partition else []),
-            f"--output={stdout!s}",
-            f"--error={stderr!s}",
-            *([f"--account={account}"] if account else []),
-            *([f"--wrap={shlex.join(command2)}"] if not is_slurm_script else []),
-            *([f"--mem={memory2.to_KiB().value:.0f}K"] if memory2 else []),
-            "--parsable",
-            *(command2 if is_slurm_script else []),
-        ]), hide="both")
+        proc = runner.run(
+            shlex.join(
+                [
+                    "sbatch",
+                    *(
+                        [f"--time={strftimedelta(walltime, '%D-%H:%M:%S')}"]
+                        if walltime
+                        else []
+                    ),
+                    f"--chdir={(cwd if cwd else Path())!s}",
+                    f"--ntasks={ntasks}",
+                    f"--cpus-per-task={cpus_per_task}",
+                    f"--gpus-per-task={gpus_per_task}",
+                    *([f"--job-name={job_name}"] if job_name else []),
+                    *([f"--partition={partition}"] if partition else []),
+                    f"--output={stdout!s}",
+                    f"--error={stderr!s}",
+                    *([f"--account={account}"] if account else []),
+                    *(
+                        [f"--wrap={shlex.join(command2)}"]
+                        if not is_slurm_script
+                        else []
+                    ),
+                    *([f"--mem={memory2.to_KiB().value:.0f}K"] if memory2 else []),
+                    "--parsable",
+                    *(command2 if is_slurm_script else []),
+                ]
+            ),
+            hide="both",
+        )
         job_id = int(proc.stdout.strip())
         logger.info("Started Slurm job %d", job_id)
-        stdout = Path(str(stdout).replace("%j", str(job_id)))
-        stderr = Path(str(stderr).replace("%j", str(job_id)))
+        stdout = stdout.parent / stdout.name.replace("%j", str(job_id))
+        stderr = stderr.parent / stderr.name.replace("%j", str(job_id))
         return SlurmJob(job_id, runner, stdout, stderr)
 
     @staticmethod
@@ -374,7 +402,8 @@ class SlurmJob:
         data (and thus different resource utilization numbers).
 
         """
-        real_key = (*command, key)
+        command2 = list(map(str, command))
+        real_key = (*command2, key)
         with _allocation_cache_manager.transaction() as allocation_cache:
             # Get the working resource allocation parameters from last time if they are unset.
             if key in allocation_cache:
@@ -383,16 +412,17 @@ class SlurmJob:
                 if memory is None:
                     memory = allocation_cache[key][1]
         memory2 = (
-            memory if isinstance(memory, bitmath.Bitmath)
-            else bitmath.parse_string(memory) if isinstance(memory, str)
+            memory
+            if isinstance(memory, bitmath.Bitmath)
+            else bitmath.parse_string(memory)
+            if isinstance(memory, str)
             else bitmath.KiB(0)
         )
-        walltime2 = (
-            walltime if walltime else datetime.timedelta(minutes=5)
-        )
+        walltime2 = walltime if walltime else datetime.timedelta(minutes=5)
         while True:
             job = SlurmJob.submit(
-                command=command,
+                command=command2,
+                runner=runner,
                 walltime=walltime2,
                 memory=memory2,
                 ntasks=ntasks,
@@ -405,16 +435,20 @@ class SlurmJob:
                 cwd=cwd,
                 account=account,
             )
-            status = await job.wait()
+            status = await job.async_run_to_completion()
             if status == "failed-mem":
                 if memory is None or memory == bitmath.KiB(0):
                     memory2 = bitmath.Bitmath.GiB(4)
                 else:
                     memory2 = memory * 3
-                logger.info("Job %r failed for memory; expanding to %r", real_key, memory2)
+                logger.info(
+                    "Job %r failed for memory; expanding to %r", real_key, memory2
+                )
             elif status == "failed-time":
                 walltime2 = walltime2 * 3
-                logger.info("Job %r failed for time; expanding to %r", real_key, walltime2)
+                logger.info(
+                    "Job %r failed for time; expanding to %r", real_key, walltime2
+                )
             elif status == "failed-retry":
                 logger.info("Job %r failed; retrying", key)
             elif status == "success":
@@ -426,15 +460,20 @@ class SlurmJob:
                     elapsed_time *= safety_factor
                     if used_mem is not None:
                         used_mem *= safety_factor
-                    logger.info("Saving parameters for %r (%r, %r)", real_key, elapsed_time, used_mem)
+                    logger.info(
+                        "Saving parameters for %r (%r, %r)",
+                        real_key,
+                        elapsed_time,
+                        used_mem,
+                    )
                     allocation_cache[key] = (walltime2, memory2)
                 return job
             else:
-                raise RuntimeError(f"Slurm job {key!s} failed with {status!s}")
+                raise RuntimeError(
+                    f"Slurm job {key!s} failed with {status!s}\n{job.read_stdout()}\n{job.read_stderr()}"
+                )
 
     @staticmethod
-    def submit_with_tenacity(
-            *args, **kwargs
-    ) -> SlurmJob:
+    def submit_with_tenacity(*args: Any, **kwargs: Any) -> SlurmJob:
         """See async_submit_with_tenacity"""
-        asyncio.run(SlurmJob.async_submit_with_tenacity(*arsg, **kwargs))
+        return asyncio.run(SlurmJob.async_submit_with_tenacity(*args, **kwargs))

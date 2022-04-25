@@ -1,0 +1,23 @@
+setup:
+  # from Illustris
+  boxlength: 106.5
+
+  # DM only simulation
+  baryons: false
+
+  # Require subgrids to be always aligned with the coarsest grid? This is necessary for some codes (ENZO) but not for others (Gadget).
+  align_top: true
+
+  # TODO: Consider changing to "ellipsoid"?
+  region: box
+cosmology:
+  Omega_m: 0.2726
+  Omega_L: 0.7274
+  Omega_b: 0
+  H0: 70.4
+  sigma_8: 0.809
+  transfer: bbks
+  sugiyama_corr: true
+  nspec: 0.961
+random:
+  seed[3]: 1234
