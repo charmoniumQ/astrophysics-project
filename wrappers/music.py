@@ -1,14 +1,14 @@
+import itertools
 import os
 from pathlib import Path
-from typing import Mapping, Union
+from typing import Mapping, Union, Sequence, cast
 
 import charmonium.time_block as ch_time_block
 import invoke  # type: ignore
 
 from util.fabric_pathlib import FabricPath
 
-from .enzo import ParamsType as EnzoParamsType
-from .enzo import parse_params as enzo_parse_params
+from .enzo import ParamsType as EnzoParamsType, parse_params as enzo_parse_params, format_params as enzo_format_params
 
 ValueType = Union[int, float, str, bool, Path]
 
@@ -40,31 +40,41 @@ def format_music_params(music_params: ParamsType) -> str:
 
 
 @ch_time_block.decor()
-def run_music(
-        cluster: invoke.Runner, bin_dir: Path, output_dir: Path, data_dir: Path, music_param_file: Path,
-) -> None:
-    if data_dir.exists():
-        FabricPath.rmtree(data_dir)
+def music(
+    cluster: invoke.Runner,
+    bin_dir: Path,
+    music_params: ParamsType,
+    output_dir: Path,
+) -> tuple[EnzoParamsType, Sequence[Path]]:
+    music_params = {
+        **music_params,
+        "output": {"format": "enzo", "filename": output_dir,},
+    }
 
-    with cluster.cd(str(output_dir)):
+    run_dir = output_dir.parent / ".tmp"
+    if run_dir.exists():
+        FabricPath.rmtree(run_dir)
+    run_dir.mkdir(parents=True)
+
+    if output_dir.exists():
+        FabricPath.rmtree(output_dir)
+
+    music_param_file = run_dir / "music_params.conf"
+    music_param_file.write_text(format_music_params(music_params))
+    with cluster.cd(str(run_dir)):
         nproc = int(cluster.run("nproc", hide="both").stdout)
         cluster.run(
-            f"{bin_dir}/MUSIC {music_param_file!s}",
+            f"{bin_dir!s}/MUSIC {music_param_file!s}",
             env={"OMP_NUM_THREADS": str(nproc),},
             hide="both",
         )
-def music(
-    cluster: invoke.Runner, bin_dir: Path, music_params: ParamsType, output_dir: Path,
-) -> EnzoParamsType:
-    data_dir = output_dir / "data"
-    enzo_param_file = data_dir / "parameter_file.txt"
-    music_param_file = output_dir / "music_params.conf"
-    music_params_str = format_music_params(
-        {**music_params, "output": {"format": "enzo", "filename": data_dir,},}
-    )
 
-    if not enzo_param_file.exists() or music_params_str != music_param_file.read_text():
-        music_param_file.write_text(music_params_str)
-        run_music(cluster, bin_dir, output_dir, data_dir, music_param_file)
-
-    return enzo_parse_params(enzo_param_file.read_text())
+    # Correct the values which refer to files (relative path ->  absolute path)
+    enzo_param_file = output_dir / "parameter_file.txt"
+    enzo_params = enzo_parse_params(enzo_param_file.read_text())
+    paths = [
+        output_dir / cast(str, enzo_params[f"CosmologySimulationParticle{quantity}{n}Name"])
+        for quantity in ["Velocity", "Displacement"]
+        for n in range(1, 4)
+    ]
+    return enzo_params, paths

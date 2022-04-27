@@ -2,32 +2,31 @@
 # Hydro parameters
 ##############################################################################
 
-CosmologySimulationUseMetallicityField: yes
+#CosmologySimulationUseMetallicityField: yes
 # Setting CosmologySimulationUseMetallicityField to 1 will create an additional tracer field for following metals. This is handy for simulations with star formation and feedback.
 # https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#cosmology
-# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L29
 
-BaryonSelfGravityApproximation: yes
+#BaryonSelfGravityApproximation: yes
 # BaryonSelfGravityApproximation controls whether gravity for baryons is determined by a quick and reasonable approximation. It should be left on (1) in most cases.
 # https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#gravity-and-particle-parameters
 
 HydroMethod: 0 # PPM DE (a direct-Eulerian version of PPM)
 # The most fundamental hydro parameter that you can set is HydroMethod, which lets you decide between the Piecewise Parabolic Method (aka PPM; option 0), or the finite-difference method used in the Zeus astrophysics code (option 2). PPM is the more advanced and optimized method.
 # https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#adiabatic-hydrodynamics-parameters
-# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L67
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L56
 
 DualEnergyFormalism: yes
 # When using PPM in a cosmological simulation, it is important to turn DualEnergyFormalism on (1), which makes total-energy schemes such as PPM stable in a regime where there are hypersonic fluid flows, which is quite common in cosmology.
 # https://enzo.readthedocs.io/en/latest/user_guide/WritingParameterFiles.html?highlight=amr#adiabatic-hydrodynamics-parameters
-# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L70
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L59
 
 PPMDiffusionParameter: no
-# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L69
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L58
 
 InterpolationMethod: 1 # SecondOrderA
 # The names specify (in at least a rough sense) the order of the leading error term for a spatial Taylor expansion, as well as a letter for possible variants within that order... The second one [zero-indexed] (SecondOrderA) is the workhorse: it's only problem is that it is not always symmetric.
 # https://enzo.readthedocs.io/en/latest/parameters/index.html#hydrodynamics-parameters
-# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/AMRCosmology/AMRCosmology.enzo#L71
+# https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L60
 
 FluxCorrection: yes
 # Strictly speaking this should always be used, but we have found it to lead to a less accurate solution for cosmological simulations because of the relatively sharp density gradients involved. However, it does appear to be important when radiative cooling is turned on and very dense structures are created.
@@ -94,3 +93,10 @@ MinimumOverDensityForRefinement: "8.0 8.0"
 
 #GreensFunctionMaxNumber = 40
 # https://github.com/enzo-project/enzo-dev/blob/006f76cc806b27c05921a94d08ac97b7f9cd20b4/run/CosmologySimulation/dm_only/dm_only.enzo#L83
+
+##############################################################################
+# IO parameters
+##############################################################################
+
+CosmologyOutputRedshift[1]: 0.0
+# The time and cycle-based outputs occur regularly at constant intervals, but the redshift outputs are specified individually. This is done by the use of this statement, which sets the output redshift for a specific identification number (this integer is between 0000 and 9999 and is used in forming the name). So the statement CosmologyOutputRedshift[1] = 4.0 will cause an output to be written out at z=4

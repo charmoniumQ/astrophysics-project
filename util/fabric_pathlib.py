@@ -5,7 +5,7 @@ import io
 import shutil
 import warnings
 from pathlib import Path
-from typing import Iterable, Generator, Union, cast
+from typing import Generator, Iterable, Union, cast
 
 import invoke  # type: ignore
 
@@ -35,7 +35,8 @@ class FabricPath:
             if not exist_ok:
                 raise FileExistsError(str(self))
         else:
-            self.runner.run(f"mkdir {'-p' if parents else ''} {self!s}", hide="both")
+            parents_arg = '--parents' if parents else ''
+            self.runner.run(f"mkdir {parents_arg} {self!s}")
 
     def exists(self) -> bool:
         # with warnings.catch_warnings(*, record=False, module=None):
@@ -49,7 +50,9 @@ class FabricPath:
             shutil.rmtree(path)
 
     @classmethod
-    def _move_or_copy(cls, move: bool, source: Union[FabricPath, Path], dest: Union[FabricPath, Path]) -> None:
+    def _move_or_copy(
+        cls, move: bool, source: Union[FabricPath, Path], dest: Union[FabricPath, Path]
+    ) -> None:
         if isinstance(source, cls) and isinstance(dest, cls):
             if source.runner == dest.runner:
                 source.runner.run(
@@ -106,3 +109,13 @@ class FabricPath:
 
     def unlink(self) -> None:
         self.runner.run(f"rm {self!s}", hide="both")
+
+    def is_relative_to(self, other: Union[FabricPath, Path]) -> None:
+        if isinstance(other, FabricPath):
+            return self.path.is_relative_to(other.path)
+        else:
+            return self.path.is_relative_to(other)
+
+    def resolve(self) -> FabricPath:
+        proc = self.runner.run(f"realpath {self!s}", hide="both")
+        return FabricPath(self.runner, proc.stdout)

@@ -1,7 +1,6 @@
 name: astrophysics
 channels:
   - defaults
-  - conda-forge
 dependencies:
   - _libgcc_mutex=0.1=main
   - _openmp_mutex=4.5=1_gnu
@@ -17,6 +16,7 @@ dependencies:
   - cryptography=36.0.0=py39h9ce1e76_0
   - fabric=2.6.0=py39h06a4308_0
   - invoke=1.6.0=py39h06a4308_0
+  - isort=5.9.3=pyhd3eb1b0_0
   - ld_impl_linux-64=2.35.1=h7274673_9
   - libffi=3.3=he6710b0_2
   - libgcc-ng=9.3.0=h5101ec6_17
@@ -47,6 +47,10 @@ dependencies:
   - tzdata=2022a=hda174b7_0
   - wheel=0.37.1=pyhd3eb1b0_0
   - xz=5.2.5=h7b6447c_0
+  - yaml=0.2.5=h7b6447c_0
+  - zlib=1.2.12=h7f8727e_2
   - pip:
     - charmonium-time-block==0.3.0
-prefix: /home/sam/.local/opt/spack/opt/spack/linux-ubuntu20.04-skylake/gcc-9.4.0/miniconda3-4.10.3-rnlsxrsue2zajiytct6rjjjohviqqoz3/envs/astrophysics
+    - tqdm-stubs==0.2.0
+    - types-pyyaml==6.0.7
+prefix: /home/sam/miniconda3/envs/astrophysics

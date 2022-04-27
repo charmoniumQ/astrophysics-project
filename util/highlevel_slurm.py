@@ -130,8 +130,8 @@ import shlex
 import time
 from dataclasses import dataclass
 from pathlib import Path
-from typing import (ContextManager, Generator, Hashable, Optional, Sequence,
-                    Tuple, Type, Union, Any, cast)
+from typing import (Any, ContextManager, Generator, Hashable, Optional,
+                    Sequence, Tuple, Type, Union, cast)
 
 import bitmath  # type: ignore
 import invoke  # type: ignore

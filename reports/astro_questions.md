@@ -1,24 +1,10 @@
-- What share of your (percantage) time did you spend on downloading, compiling, and installing the dependencies of your program?
-- What share of your (percantage) time did you spend on downloading, compiling, and installing your program?
-- Would you be interested in using a tool that automates the process of installing programs and their dependencies?
-- On a scale from 1 to 5, was Slurm over SSH very easy (1) or very frustrating (5) to use?
-
-- Would you be interested in a Python library that automates the submission of Surm jobs? You would write something like and run it on your machine:
-```
-    # Specify the cluster
-    campus_cluster = Connection("grayson5@cc-login.campuscluster.illinois.edu")
-
-    # Specify the job
-    job = SlurmJob.submit(
-        "mpirun ./FLASH4",
-        runner=campus_cluster,
-        ntasks=8,
-		cpus_per_task=4,
-        ... # other options here
-    )
-
-    # Wait for it to finish
-    await job.run_to_completion()
-```
-- What other technical obstacles or nuisances did you encounter?
-- Is your workflow reproducible from your manuscript?
+- Dependencies take a significant amount of time (median > 5 hrs), frustrating (median > 3), similar problems in research (average > 0.7), and interest in tool (average > 0.5).
+  - This motivates Spack and quantifies its savings.
+- Conda (average > 0.1)
+  - People probably use Conda. But it only supports some software packages. Not as good as Spack.
+- Module load (average > 0.3)
+  - Module load is installed on the cluster, but it only supports a limited amount of pre-installed software. Not as good as Spack.
+- Slurm is frustrating (median > 3), use similar tool in research (median > 0.5), interest in tool (average > 0.3)
+  - This motivates highlevel-slurm
+- Accessing files remotely is easy (median < 3), used in research (median > 0.8), use rsync (median > 0.1), use filezilla (median > 0.3)
+- Not Reproducible (median < 0.4)

@@ -10,6 +10,7 @@ setup:
 
   # TODO: Consider changing to "ellipsoid"?
   region: box
+
 cosmology:
   Omega_m: 0.2726
   Omega_L: 0.7274
@@ -19,5 +20,6 @@ cosmology:
   transfer: bbks
   sugiyama_corr: true
   nspec: 0.961
+
 random:
   seed[3]: 1234

@@ -20,3 +20,5 @@
     - Don't have to SSH.
     - Can use Python types (e.g. timedelta).
       - Submit _with tenacity_.
+
+- Fix Enzo's documentation.
