@@ -47,7 +47,6 @@ def enzo(*args: Any, **kwargs: Any,) -> None:
 
 async def async_enzo(
     cluster: invoke.Runner,
-    bin_dir: Path,
     enzo_params: ParamsType,
     output_dir: Path,
     ntasks: int,
@@ -69,10 +68,10 @@ async def async_enzo(
         job_future = asyncio.create_task(
             SlurmJob.async_submit_with_tenacity(
                 command=[
-                    bin_dir / "mpirun",
+                    "mpirun",
                     "--np",
                     ntasks,
-                    bin_dir / "enzo",
+                    "enzo",
                     enzo_params_file,
                 ],
                 runner=cluster,

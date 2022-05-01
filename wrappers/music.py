@@ -42,7 +42,6 @@ def format_music_params(music_params: ParamsType) -> str:
 @ch_time_block.decor()
 def music(
     cluster: invoke.Runner,
-    bin_dir: Path,
     music_params: ParamsType,
     output_dir: Path,
 ) -> tuple[EnzoParamsType, Sequence[Path]]:
@@ -62,11 +61,11 @@ def music(
     music_param_file = run_dir / "music_params.conf"
     music_param_file.write_text(format_music_params(music_params))
     with cluster.cd(str(run_dir)):
-        nproc = int(cluster.run("nproc", hide="both").stdout)
+        nproc = int(cluster.run("nproc", hide="stdout").stdout)
         cluster.run(
-            f"{bin_dir!s}/MUSIC {music_param_file!s}",
+            f"MUSIC {music_param_file!s} > {run_dir!s}/music_stdout",
             env={"OMP_NUM_THREADS": str(nproc),},
-            hide="both",
+            hide="stdout",
         )
 
     # Correct the values which refer to files (relative path ->  absolute path)

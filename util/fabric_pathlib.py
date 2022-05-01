@@ -39,13 +39,12 @@ class FabricPath:
             self.runner.run(f"mkdir {parents_arg} {self!s}")
 
     def exists(self) -> bool:
-        # with warnings.catch_warnings(*, record=False, module=None):
         return bool(self.runner.run(f"ls {self!s}", hide="both", warn=True).exited == 0)
 
     @classmethod
     def rmtree(cls, path: Path) -> None:
         if isinstance(path, cls):
-            path.runner.run(f"rm -rf {path!s}", hide="both")
+            path.runner.run(f"rm -rf {path!s}", hide="stdout")
         else:
             shutil.rmtree(path)
 
@@ -56,22 +55,23 @@ class FabricPath:
         if isinstance(source, cls) and isinstance(dest, cls):
             if source.runner == dest.runner:
                 source.runner.run(
-                    f"{'mv' if move else 'cp'} {source!s} {dest!s}", hide="both"
+                    f"{'mv' if move else 'cp'} {source!s} {dest!s}", hide="stdout"
                 )
             else:
                 # tmp = io.BytesIO()
                 raise NotImplementedError
-                tmp = Path()
+                tmp = Path(tempfile.gettempdir()) / secrets.token_hex(16)
                 cls._move_or_copy(move, source, tmp)
                 cls._move_or_copy(move, tmp, dest)
         elif isinstance(source, cls):
             source.runner.get(str(source), str(dest))
-            if not move:
-                source.runner.run(f"rm {source!s}", hide="both")
+            if move:
+                source.unlink()
+                source.runner.run(f"rm {source!s}", hide="stdout")
         elif isinstance(dest, cls):
             dest.runner.put(str(source), str(dest))
-            if not move:
-                dest.runner.run(f"rm {dest!s}", hide="both")
+            if move:
+                source.unlink()
         else:
             assert isinstance(source, Path) and isinstance(dest, Path)
             if move:
@@ -88,7 +88,7 @@ class FabricPath:
         cls._move_or_copy(True, source, dest)
 
     def iterdir(self) -> Generator[FabricPath, None, None]:
-        proc = self.runner.run(f"ls {self!s}", hide="both")
+        proc = self.runner.run(f"ls {self!s}", hide="stdout")
         for filename in proc.stdout.split("\n"):
             if filename:
                 yield self / filename
@@ -102,13 +102,13 @@ class FabricPath:
         return self.path.name
 
     def rmdir(self) -> None:
-        self.runner.run(f"rmdir {self!s}", hide="both")
+        self.runner.run(f"rmdir {self!s}", hide="stdout")
 
     def cast(self) -> Path:
         return cast(Path, self)
 
     def unlink(self) -> None:
-        self.runner.run(f"rm {self!s}", hide="both")
+        self.runner.run(f"rm {self!s}", hide="stdout")
 
     def is_relative_to(self, other: Union[FabricPath, Path]) -> None:
         if isinstance(other, FabricPath):
@@ -117,5 +117,10 @@ class FabricPath:
             return self.path.is_relative_to(other)
 
     def resolve(self) -> FabricPath:
-        proc = self.runner.run(f"realpath {self!s}", hide="both")
+        proc = self.runner.run(f"realpath {self!s}", hide="stdout")
         return FabricPath(self.runner, proc.stdout)
+
+    def symlink_to(self, other: FabricPath) -> None:
+        if self.runner != other.runner:
+            raise ValueError("Cannot symlink paths on different runners {self} {other}.")
+        self.runner.run(f"ln -s {other!s} {self!s}")
