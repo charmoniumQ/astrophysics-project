@@ -14,18 +14,21 @@ from util.util import strhash
 ValueType = Union[int, float, str, bool, Path]
 ParamsType = Mapping[str, ValueType]
 
+
 def parse_params(enzo_params: str) -> ParamsType:
     config = {}
     for line in enzo_params.split("\n"):
         # Cut off comments
         if "#" in line:
-            line = line[:line.find("#")]
+            line = line[: line.find("#")]
         if "//" in line:
-            line = line[:line.find("//")]
+            line = line[: line.find("//")]
         line = line.strip()
         if line:
             if "=" not in line:
-                raise RuntimeError("{line!r} doesn't look like valid enzo parameter line.")
+                raise RuntimeError(
+                    "{line!r} doesn't look like valid enzo parameter line."
+                )
             else:
                 left, _, right = line.partition("=")
                 config[left.strip()] = right.strip()
@@ -37,7 +40,10 @@ def format_value(value: ValueType) -> str:
 
 
 def format_params(enzo_params: ParamsType) -> str:
-    return "\n".join(f"{var} = {format_value(val)}" for var, val in enzo_params.items()) + "\n"
+    return (
+        "\n".join(f"{var} = {format_value(val)}" for var, val in enzo_params.items())
+        + "\n"
+    )
 
 
 @ch_time_block.decor()
@@ -67,13 +73,7 @@ async def async_enzo(
             stderr.unlink()
         job_future = asyncio.create_task(
             SlurmJob.async_submit_with_tenacity(
-                command=[
-                    "mpirun",
-                    "--np",
-                    ntasks,
-                    "enzo",
-                    enzo_params_file,
-                ],
+                command=["mpirun", "--np", ntasks, "enzo", enzo_params_file,],
                 runner=cluster,
                 key=(strhash(format_params(enzo_params)), key),
                 cwd=output_dir,

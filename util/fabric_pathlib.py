@@ -17,6 +17,7 @@ PathLike = Union["FabricPath", Path, str]
 def raise_(exc: Exception) -> NoReturn:
     raise exc
 
+
 class FabricPath:
     def __init__(self, path: PathLike, runner: Optional[invoke.Runner] = None) -> None:
         self.path: Path
@@ -53,7 +54,7 @@ class FabricPath:
             if not exist_ok:
                 raise FileExistsError(str(self))
         else:
-            parents_arg = '--parents' if parents else ''
+            parents_arg = "--parents" if parents else ""
             self.runner.run(f"mkdir {parents_arg} {self!s}")
 
     def exists(self) -> bool:
@@ -131,7 +132,9 @@ class FabricPath:
     def symlink_to(self, other: PathLike) -> None:
         fother = FabricPath(other)
         if self.runner != fother.runner:
-            raise ValueError("Cannot symlink paths on different runners {self} {fother}.")
+            raise ValueError(
+                "Cannot symlink paths on different runners {self} {fother}."
+            )
         self.runner.run(f"ln -s {fother!s} {self!s}")
 
     @staticmethod
@@ -142,8 +145,24 @@ class FabricPath:
             fsource = FabricPath(source)
             fdest = FabricPath(dest)
             tarball = "tmp.tar.gz"
-            fsource.runner.run(f"tar --directory={fsource!s} --create --gzip --file {fsource.parent!s}/{tarball} .", hide="stdout")
+            fsource.runner.run(
+                f"tar --directory={fsource!s} --create --gzip --file {fsource.parent!s}/{tarball} .",
+                hide="stdout",
+            )
             fdest.mkdir(parents=True)
             FabricPath.move(fsource.parent / tarball, fdest / tarball)
-            fdest.runner.run(f"tar --directory={fdest!s} --extract --gunzip --file {fdest!s}/{tarball}", hide="stdout")
+            fdest.runner.run(
+                f"tar --directory={fdest!s} --extract --gunzip --file {fdest!s}/{tarball}",
+                hide="stdout",
+            )
             (fdest / tarball).unlink()
+
+    def readlink(self) -> FabricPath:
+        return FabricPath(
+            self.runner.run(f"readlink --canonicalize {self!s}", hide="stdout").stdout,
+            self.runner,
+        )
+
+    def __eq__(self, other: PathLike) -> bool:
+        other2 = FabricPath(other)
+        return self.runner == other2.runner and self.path == other2.path

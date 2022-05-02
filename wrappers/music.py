@@ -8,7 +8,11 @@ import invoke  # type: ignore
 
 from util.fabric_pathlib import FabricPath
 
-from .enzo import ParamsType as EnzoParamsType, parse_params as enzo_parse_params, format_params as enzo_format_params
+from .enzo import (
+    ParamsType as EnzoParamsType,
+    parse_params as enzo_parse_params,
+    format_params as enzo_format_params,
+)
 
 ValueType = Union[int, float, str, bool, Path]
 
@@ -41,9 +45,7 @@ def format_music_params(music_params: ParamsType) -> str:
 
 @ch_time_block.decor()
 def music(
-    cluster: invoke.Runner,
-    music_params: ParamsType,
-    output_dir: Path,
+    cluster: invoke.Runner, music_params: ParamsType, output_dir: Path,
 ) -> tuple[EnzoParamsType, Sequence[Path]]:
     music_params = {
         **music_params,
@@ -68,12 +70,20 @@ def music(
             hide="stdout",
         )
 
+    return get_stored_output(output_dir)
+
+
+def get_stored_output(output_dir: Path) -> tuple[EnzoParamsType, Sequence[Path]]:
+    generated_enzo_params = enzo_parse_params(
+        (output_dir / "parameter_file.txt").read_text()
+    )
     # Correct the values which refer to files (relative path ->  absolute path)
-    enzo_param_file = output_dir / "parameter_file.txt"
-    enzo_params = enzo_parse_params(enzo_param_file.read_text())
-    paths = [
-        output_dir / cast(str, enzo_params[f"CosmologySimulationParticle{quantity}{n}Name"])
+    enzo_paths = [
+        output_dir
+        / cast(
+            str, generated_enzo_params[f"CosmologySimulationParticle{quantity}{n}Name"]
+        )
         for quantity in ["Velocity", "Displacement"]
         for n in range(1, 4)
     ]
-    return enzo_params, paths
+    return generated_enzo_params, enzo_paths

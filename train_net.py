@@ -24,6 +24,7 @@ def main(voxels_per_side: int, padding: int):
 
     # Create the generator.
     generator = vanilla_unet(input_shape=(box_size,) * 3, num_classes=latent_dim)
+
     class ConditionalGAN(keras.Model):
         def __init__(self, discriminator, generator, latent_dim):
             super(ConditionalGAN, self).__init__()
@@ -60,7 +61,9 @@ def main(voxels_per_side: int, padding: int):
             # Sample random points in the latent space and concatenate the labels.
             # This is for the generator.
             batch_size = tf.shape(real_images)[0]
-            random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+            random_latent_vectors = tf.random.normal(
+                shape=(batch_size, self.latent_dim)
+            )
             random_vector_labels = tf.concat(
                 [random_latent_vectors, one_hot_labels], axis=1
             )
@@ -70,7 +73,9 @@ def main(voxels_per_side: int, padding: int):
 
             # Combine them with real images. Note that we are concatenating the labels
             # with these images here.
-            fake_image_and_labels = tf.concat([generated_images, image_one_hot_labels], -1)
+            fake_image_and_labels = tf.concat(
+                [generated_images, image_one_hot_labels], -1
+            )
             real_image_and_labels = tf.concat([real_images, image_one_hot_labels], -1)
             combined_images = tf.concat(
                 [fake_image_and_labels, real_image_and_labels], axis=0
@@ -91,7 +96,9 @@ def main(voxels_per_side: int, padding: int):
             )
 
             # Sample random points in the latent space.
-            random_latent_vectors = tf.random.normal(shape=(batch_size, self.latent_dim))
+            random_latent_vectors = tf.random.normal(
+                shape=(batch_size, self.latent_dim)
+            )
             random_vector_labels = tf.concat(
                 [random_latent_vectors, one_hot_labels], axis=1
             )
@@ -103,11 +110,15 @@ def main(voxels_per_side: int, padding: int):
             # of the discriminator)!
             with tf.GradientTape() as tape:
                 fake_images = self.generator(random_vector_labels)
-                fake_image_and_labels = tf.concat([fake_images, image_one_hot_labels], -1)
+                fake_image_and_labels = tf.concat(
+                    [fake_images, image_one_hot_labels], -1
+                )
                 predictions = self.discriminator(fake_image_and_labels)
                 g_loss = self.loss_fn(misleading_labels, predictions)
             grads = tape.gradient(g_loss, self.generator.trainable_weights)
-            self.g_optimizer.apply_gradients(zip(grads, self.generator.trainable_weights))
+            self.g_optimizer.apply_gradients(
+                zip(grads, self.generator.trainable_weights)
+            )
 
             # Monitor loss.
             self.gen_loss_tracker.update_state(g_loss)
@@ -117,7 +128,7 @@ def main(voxels_per_side: int, padding: int):
                 "d_loss": self.disc_loss_tracker.result(),
             }
 
-    cond_gan = ConditionalGAN(descriminator, generator, )
+    cond_gan = ConditionalGAN(descriminator, generator,)
     cond_gan.compile(
         d_optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
         g_optimizer=keras.optimizers.Adam(learning_rate=learning_rate),
@@ -125,5 +136,3 @@ def main(voxels_per_side: int, padding: int):
     )
 
     cond_gan.fit(dataset, epochs=20)
-
-
