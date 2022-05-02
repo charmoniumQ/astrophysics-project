@@ -98,5 +98,19 @@ MinimumOverDensityForRefinement: "8.0 8.0"
 # IO parameters
 ##############################################################################
 
-CosmologyOutputRedshift[1]: 0.0
+# dtDataDump: 30
+# The time interval, in code units, between time-based outputs. A value of 0 turns off the time-based outputs. Default: 0
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#general-i-o-parameters
+
+# CosmologyOutputRedshift[1]: 31
+# CosmologyOutputRedshift[2]: 16
+# CosmologyOutputRedshift[3]: 8
+# CosmologyOutputRedshift[4]: 4
+# CosmologyOutputRedshift[5]: 2
+# CosmologyOutputRedshift[6]: 1
+# CosmologyOutputRedshift[7]: 0.5
+# CosmologyOutputRedshift[8]: 0.25
+# CosmologyOutputRedshift[9]: 0.125
+# CosmologyOutputRedshift[10]: 0.0
 # The time and cycle-based outputs occur regularly at constant intervals, but the redshift outputs are specified individually. This is done by the use of this statement, which sets the output redshift for a specific identification number (this integer is between 0000 and 9999 and is used in forming the name). So the statement CosmologyOutputRedshift[1] = 4.0 will cause an output to be written out at z=4
+# https://enzo.readthedocs.io/en/latest/parameters/index.html#general-i-o-parameters

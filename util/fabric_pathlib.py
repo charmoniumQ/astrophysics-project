@@ -3,23 +3,41 @@ from __future__ import annotations
 import fnmatch
 import io
 import shutil
+import secrets
+import tempfile
 import warnings
 from pathlib import Path
-from typing import Generator, Iterable, Union, cast
+from typing import Generator, Iterable, Union, Optional, NoReturn, cast
 
 import invoke  # type: ignore
 
+PathLike = Union["FabricPath", Path, str]
+
+
+def raise_(exc: Exception) -> NoReturn:
+    raise exc
 
 class FabricPath:
-    def __init__(self, runner: invoke.Runner, path: Union[Path, str]) -> None:
-        self.runner = runner
-        self.path = path if isinstance(path, Path) else Path(path)
+    def __init__(self, path: PathLike, runner: Optional[invoke.Runner] = None) -> None:
+        self.path: Path
+        self.runner: invoke.Runner
+        if isinstance(path, FabricPath):
+            self.path = path.path
+            self.runner = path.runner
+        elif isinstance(path, Path):
+            self.path = path
+            self.runner = runner if runner else invoke.Local(invoke.Context())
+        elif isinstance(path, str):
+            self.path = Path(path)
+            self.runner = runner if runner else invoke.Local(invoke.Context())
+        else:
+            raise TypeError(f"Don't know {type(path)}")
 
     def __str__(self) -> str:
         return str(self.path)
 
     def __truediv__(self, other: Union[str, Path]) -> FabricPath:
-        return FabricPath(self.runner, self.path / other)
+        return FabricPath(self.path / other, self.runner)
 
     def write_text(self, text: str) -> None:
         tmp_fileobj = io.BytesIO(text.encode())
@@ -42,49 +60,42 @@ class FabricPath:
         return bool(self.runner.run(f"ls {self!s}", hide="both", warn=True).exited == 0)
 
     @classmethod
-    def rmtree(cls, path: Path) -> None:
-        if isinstance(path, cls):
-            path.runner.run(f"rm -rf {path!s}", hide="stdout")
-        else:
-            shutil.rmtree(path)
+    def rmtree(cls, path: PathLike) -> None:
+        fpath = FabricPath(path)
+        fpath.runner.run(f"rm -rf {path!s}", hide="stdout")
 
     @classmethod
-    def _move_or_copy(
-        cls, move: bool, source: Union[FabricPath, Path], dest: Union[FabricPath, Path]
-    ) -> None:
-        if isinstance(source, cls) and isinstance(dest, cls):
+    def _move_or_copy(cls, move: bool, source: PathLike, dest: PathLike) -> None:
+        if isinstance(source, FabricPath) and isinstance(dest, FabricPath):
             if source.runner == dest.runner:
                 source.runner.run(
                     f"{'mv' if move else 'cp'} {source!s} {dest!s}", hide="stdout"
                 )
             else:
-                # tmp = io.BytesIO()
-                raise NotImplementedError
                 tmp = Path(tempfile.gettempdir()) / secrets.token_hex(16)
                 cls._move_or_copy(move, source, tmp)
                 cls._move_or_copy(move, tmp, dest)
-        elif isinstance(source, cls):
-            source.runner.get(str(source), str(dest))
+        elif isinstance(source, FabricPath) and hasattr(source.runner, "get"):
+            source.runner.get(str(source.path), str(dest))
             if move:
                 source.unlink()
-                source.runner.run(f"rm {source!s}", hide="stdout")
-        elif isinstance(dest, cls):
-            dest.runner.put(str(source), str(dest))
+        elif isinstance(dest, FabricPath) and hasattr(dest.runner, "put"):
+            dest.runner.put(str(source), str(dest.path))
             if move:
-                source.unlink()
+                assert not isinstance(source, FabricPath)
+                Path(source).unlink()
         else:
-            assert isinstance(source, Path) and isinstance(dest, Path)
             if move:
-                shutil.move(source, dest)
+                shutil.move(str(source), str(dest))
             else:
-                shutil.copy(source, dest)
+                shutil.copy(str(source), str(dest))
 
     @classmethod
-    def copy(cls, source: Path, dest: Path) -> None:
+    def copy(cls, source: PathLike, dest: PathLike) -> None:
         cls._move_or_copy(False, source, dest)
 
     @classmethod
-    def move(cls, source: Path, dest: Path) -> None:
+    def move(cls, source: PathLike, dest: PathLike) -> None:
         cls._move_or_copy(True, source, dest)
 
     def iterdir(self) -> Generator[FabricPath, None, None]:
@@ -95,7 +106,7 @@ class FabricPath:
 
     @property
     def parent(self) -> FabricPath:
-        return FabricPath(self.runner, self.path.parent)
+        return FabricPath(self.path.parent, self.runner)
 
     @property
     def name(self) -> str:
@@ -110,17 +121,29 @@ class FabricPath:
     def unlink(self) -> None:
         self.runner.run(f"rm {self!s}", hide="stdout")
 
-    def is_relative_to(self, other: Union[FabricPath, Path]) -> None:
-        if isinstance(other, FabricPath):
-            return self.path.is_relative_to(other.path)
-        else:
-            return self.path.is_relative_to(other)
+    def is_relative_to(self, other: PathLike) -> bool:
+        return self.path.is_relative_to(FabricPath(other).path)
 
     def resolve(self) -> FabricPath:
         proc = self.runner.run(f"realpath {self!s}", hide="stdout")
-        return FabricPath(self.runner, proc.stdout)
+        return FabricPath(proc.stdout, self.runner)
 
-    def symlink_to(self, other: FabricPath) -> None:
-        if self.runner != other.runner:
-            raise ValueError("Cannot symlink paths on different runners {self} {other}.")
-        self.runner.run(f"ln -s {other!s} {self!s}")
+    def symlink_to(self, other: PathLike) -> None:
+        fother = FabricPath(other)
+        if self.runner != fother.runner:
+            raise ValueError("Cannot symlink paths on different runners {self} {fother}.")
+        self.runner.run(f"ln -s {fother!s} {self!s}")
+
+    @staticmethod
+    def copytree(source: PathLike, dest: PathLike) -> None:
+        if isinstance(source, (Path, str)) and isinstance(dest, (Path, str)):
+            shutil.copytree(source, dest)
+        else:
+            fsource = FabricPath(source)
+            fdest = FabricPath(dest)
+            tarball = "tmp.tar.gz"
+            fsource.runner.run(f"tar --directory={fsource!s} --create --gzip --file {fsource.parent!s}/{tarball} .", hide="stdout")
+            fdest.mkdir(parents=True)
+            FabricPath.move(fsource.parent / tarball, fdest / tarball)
+            fdest.runner.run(f"tar --directory={fdest!s} --extract --gunzip --file {fdest!s}/{tarball}", hide="stdout")
+            (fdest / tarball).unlink()

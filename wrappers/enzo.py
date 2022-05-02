@@ -88,7 +88,7 @@ async def async_enzo(
             await asyncio.sleep(1)
 
     z_line = re.compile("z = (\d+(?:.\d+)?)")
-    last_z = zstart
+    last_z = float(zstart)
     with ch_time_block.ctx("enzo"):
         with tqdm(total=zstart, desc="z") as progress_bar:
             while not job_future.done():
