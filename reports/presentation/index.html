@@ -1,43 +1,264 @@
 <!doctype html>
-<!-- See
-https://rgivisiez.github.io/dissertation-defense/#/16
--->
 <html>
-	<head>
-		<meta charset="utf-8">
-		<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 
-		<title>reveal.js</title>
+	<title>Neural Network Superresolution for Cosmological Simulation</title>
 
-		<link rel="stylesheet" href="dist/reset.css">
-		<link rel="stylesheet" href="dist/reveal.css">
-		<link rel="stylesheet" href="dist/theme/black.css">
+	<link rel="stylesheet" href="dist/reset.css">
+	<link rel="stylesheet" href="dist/reveal.css">
+	<link rel="stylesheet" href="dist/theme/black.css">
 
-		<!-- Theme used for syntax highlighted code -->
-		<link rel="stylesheet" href="plugin/highlight/monokai.css">
-	</head>
-	<body>
-		<div class="reveal">
-			<div class="slides">
-				<section>Slide 1</section>
-				<section>Slide 2</section>
+	<!-- Theme used for syntax highlighted code -->
+	<link rel="stylesheet" href="plugin/highlight/monokai.css">
+	<style>
+	  .reveal {
+		  margin-top: 2vh;
+		  margin-bottom: 2vh;
+	  }
+	  .reveal p {
+		  font-size: 5.5vh;
+	  }
+	  .reveal a.img-source {
+		  font-size: 2vh;
+		  color: #9999cc;
+	  }
+	  .reveal figure > img {
+		  margin-bottom: 0px;
+	  }
+	  .reveal figure > figcaption {
+		  margin: 0px;
+		  font-size: 0.4vh;
+	  }
+	  .problem {
+		  color: #cc9999;
+	  }
+	  .solution {
+		  color: #99cc99;
+	  }
+	</style>
+  </head>
+  <body>
+	<div class="reveal">
+	  <div class="slides">
+		<section data-auto-animate>
+		  <h2>Neural Network Superresolution of Cosmological Simulations</h2>
+		  <br />
+		  <p>Samuel Grayson</p>
+		</section>
+		<section data-auto-animate>
+		  <h3>Why do cosmological simulation</h3>
+		  <br />
+		  <p class="fragment">We don't know how physics works on a large-scale.</p>
+		</section>
+		<section data-auto-animate>
+		  <p>We don't know how physics works on a large-scale.</p>
+		  <span class="menu-title" style="display: none;">Horizon problem</span>
+		  <p class="problem"><b>Q:</b> Why do causally-disconnected regions look homogeneous?</p>
+		  <figure>
+			<img src="assets/causally_disconnected.jpg" style="height: 70vh" />
+			<figcaption>
+			  <a class="img-source" href="http://www.ctc.cam.ac.uk/outreach/origins/inflation_zero.php">source</a>
+			</figcaption>
+		  </figure>
+		</section>
+		<section data-auto-animate>
+		  <span class="menu-title" style="display: none;">Inflation</span>
+		  <p>We don't know how physics works on a large-scale.</p>
+		  <p class="problem"><b>Q:</b> Why do causally-disconnected regions look homogeneous?</p>
+		  <p class="solution"><b>A:</b> Rapid inflation</p>
+		  <figure>
+			<img src="assets/inflation.jpg" style="height: 60vh"/>
+			<figcaption>
+			  <a class="img-source" href="https://commons.wikimedia.org/wiki/File:Lambda-Cold_Dark_Matter,_Accelerated_Expansion_of_the_Universe,_Big_Bang-Inflation.jpg">source</a>
+			</figcaption>
+		  </figure>
+		</section>
+		<section data-auto-animate>
+		  <span class="menu-title" style="display: none;">Fine-tuning problem</span>
+		  <p>We don't know how physics works on a large-scale.</p>
+		  <p class="problem"><b>Q:</b> Why do causally-disconnected regions look homogeneous?</p>
+		  <p class="solution"><b>A:</b> Rapid inflation</p>
+		  <p class="problem">Fine-tuning problem</p>
+		  <!-- TODO -->
+		</section>
+		<section data-auto-animate>
+		  <span class="menu-title" style="display: none;">High-level cosmological structure</span>
+		  <p>We don't know how physics works on a large-scale.</p>
+		  <p class="problem"><b>Q:</b> Why does matter clump weirdly?</p>
+		  <figure>
+			<img src="assets/observable_universe_logarithmic.png" style="height: 40vh"/>
+			<figcaption>
+			  <a class="img-source" href="https://en.wikipedia.org/wiki/Observable_universe#/media/File:Observable_Universe_Logarithmic_Map_(horizontal_layout_english_annotations).png">source</a>
+			</figcaption>
+		  </figure>
+		  <figure>
+			<img src="assets/hubble_tuning_fork.jpg" style="height: 25vh"/>
+			<figcaption>
+			  <a class="img-source" href="https://commons.wikimedia.org/wiki/File:HubbleTuningFork.jpg">source</a>
+			</figcaption>
+		  </figure>
+		</section>
+		<section data-auto-animate>
+		  <span class="menu-title" style="display: none;">Dark matter</span>
+		  <p>We don't know how physics works on a large-scale.</p>
+		  <p class="problem"><b>Q:</b> Why does matter clump weirdly?</p>
+		  <p class="solution"><b>A:</b> Keep gravity, add dark matter particles</p>
+		  <figure>
+			<img src="assets/cosmology_sim.jpg" style="height: 50vh"/>
+			<figcaption>
+			  <a class="img-source" href="https://www.tng-project.org/media/">source</a>
+			</figcaption>
+		  </figure>
+		</section>
+		<section data-auto-animate>
+		  <span class="menu-title" style="display: none;">Modified Newtonian Dynamics</span>
+		  <p>We don't know how physics works on a large-scale.</p>
+		  <p class="problem"><b>Q:</b> Why does matter clump weirdly?</p>
+		  <p class="solution"><b>A:</b> Keep gravity, add dark matter particles</p>
+		  <p class="problem"><b>A':</b> Keep standard particle model, change gravity</p>
+		  <p>\(F = \mu(\frac{r}{r_0})G\frac{Mm}{r^2}\) <a class="cite" href="https://www.annualreviews.org/doi/full/10.1146/annurev.astro.40.060401.093923">Sanders and McGaugh 2002</a></p>
+		</section>
+		<section data-auto-animate>
+		  <span class="menu-title" style="display: none;">Speed up cosmological simulation</span>
+		  <p class="problem"><span data-item-id="dcs">Cosmological simulation is computationally expensive (decades of optimizations)</p>
+		  <br style="height: 5vw;"/>
+		  <div class="fragment">
+			<p class="solution">Speed up with machine learning</p>
+		  </div>
+		  <br />
+		  <div class="fragment">
+			<div class="problem">
+			  <p>ML isn't magic; Can't do entire physical simulation.</p>
+			  <p>Not explainable, not verifiable.</p>
 			</div>
-		</div>
+		  </div>
+		  <br />
+		  <div class="fragment">
+			<p class="solution">Could try enhancing resolution of existing simulation.</p>
+		  </div>
+		</section>
+		<section>
+		  <h3>Zoom and enhance</h3>
+		  <p>
+			<video autoplay controls width="80%" height="80%">
+			  <!--
+				  yt-dlp 'https://www.youtube.com/watch?v=gjvywPW39tg' --output "futurama_zoom_enhance.%(ext)s"
+				  ffmpeg -ss 00:00:34.0 -i futurama_zoom_enhance.webm -t 00:00:14.0 futurama_zoom_enhance_clipped.mp4
+				  ffmpeg -ss 00:00:34.0 -i futurama_zoom_enhance.webm -t 00:00:14.0 futurama_zoom_enhance_clipped.webm
+				  ffmpeg -ss 00:00:34.0 -i futurama_zoom_enhance.webm -t 00:00:14.0 futurama_zoom_enhance_clipped.ogg
+				  rm futurama_zoom_enhance.mp4
+				-->
+			  <source src="assets/futurama_zoom_enhance_clipped.mp4" type="video/mp4">
+				<source src="assets/futurama_zoom_enhance_clipped.mp4" type="video/webm">
+				  <source src="assets/futurama_zoom_enhance_clipped.ogg" type="video/ogg">
+			</video>
+		  </p>
+		</section>
+		<section data-auto-animate>
+		  <h3>Superresolution</h3>
+		  <a class="cite" href="https://www.morganclaypool.com/doi/abs/10.2200/S00036ED1V01Y200606IVM007">Katsaggelos, Molina, and Mateos 2007</a>
+		  <figure>
+			<img src="assets/superresolution.jpg" style="height: 50vh"/>
+			<figcaption>
+			  <a class="img-source" href="https://amundtveit.com/2017/06/04/deep-learning-for-image-super-resolution-scale-up/">source</a>
+			</figcaption>
+		  </figure>
+		</section>
+		<section data-auto-animate>
+		  <h3>Superresolution</h3>
+		  <a class="cite" href="https://www.morganclaypool.com/doi/abs/10.2200/S00036ED1V01Y200606IVM007">Katsaggelos, Molina, and Mateos 2007</a>
+		  <figure>
+			<img src="assets/classical-superresolution.png" style="height: 80vh"/>
+		  </figure>
+		</section>
+		<!-- <section> -->
+		  <!-- 	<p>Superresolution</p> -->
+		  <!-- 	<p><blockquote>What has been will be again; there is nothing new under the sun. &mdash;Ecclesiastes 1:9</blockquote></p> -->
+		  <!-- </section> -->
+		<section data-auto-animate>
+		  <h3>GANs</h3>
+		  <a href="https://proceedings.neurips.cc/paper/2014/hash/5ca3e9b122f61f8f06494c97b1afccf3-Abstract.html">Goodfellow et al. 2014</a>
+		  <figure>
+			<img src="assets/gan.png" style="height: 70vh"/>
+			<figcaption>
+			  <a class="img-source" href="https://medium.datadriveninvestor.com/generative-adversarial-network-gan-using-keras-ce1c05cfdfd3">source</a>
+			</figcaption>
+		  </figure>
+		</section>
+		<section>
+		  <span class="menu-title" style="display: none;">Simulation workflow</span>
+		  <figure>
+			<img src="assets/workflow.png" style="height: 99vh"/>
+		  </figure>
+		</section>
+		<section>
+		  <h3>Tools</h3>
+		  <ul>
+			<li>Enzo: AMR cosmological sim (<a href="https://doi.org/10.1088/0067-0049/211/2/19">Bryan et al. 2014</a>)</li>
+			<li>MUSIC: iniital conditions generator (<a href="https://arxiv.org/abs/1103.6031">Hahn and Abel 2011</a>)</li>
+			<li>Spack: Package manager (<a href="https://doi.org/10.1145/2807591.2807623">Gamblin et al. 2015</a>)</li>
+		  </ul>
+		</section>
+		<section>
+		  <h3>Simulation</h3>
+		  <figure class="fragment">
+			<img src="assets/sim-0.png" style="width: 48%"/>
+			<img src="assets/sim-1.png" style="width: 48%"/>
+		  </figure>
+		</section>
+		<section>
+		  Metrics
+		</section>
+		<section>
+		  <h3>Bibliogrpahy</h3>
+		  <ul style="font-size: 10pt;">
+			<li>
+			  R. H. Sanders and S. S. McGaugh, “Modified Newtonian Dynamics as an Alternative to Dark Matter,” Annual Review of Astronomy and Astrophysics, vol. 40, no. 1, pp. 263–317, 2002, doi: <a href="https://doi.org/10.1146/annurev.astro.40.060401.093923">10.1146/annurev.astro.40.060401.093923</a>.
+			</li>
+			<li>
+			  A. K. Katsaggelos, R. Molina, and J. Mateos, “Super Resolution of Images and Video,” Synthesis Lectures on Image, Video, and Multimedia Processing, vol. 3, no. 1, pp. 1–134, Jan. 2007, doi: <a href="https://doi.org/10.2200/S00036ED1V01Y200606IVM007">10.2200/S00036ED1V01Y200606IVM007</a>.
+			</li>
+			<li>
+			  I. Goodfellow et al., “Generative Adversarial Nets,” in Advances in Neural Information Processing Systems, 2014, vol. 27. Accessed: May 02, 2022. [Online]. <a href="https://proceedings.neurips.cc/paper/2014/hash/5ca3e9b122f61f8f06494c97b1afccf3-Abstract.html">Available</a>.
+			</li>
+			<li>
+			  G. L. Bryan et al., “Enzo: An Adaptive Mesh Refinement Code for Astrophysics,” ApJS, vol. 211, no. 2, p. 19, Mar. 2014, doi: <a href="https://doi.org/10.1088/0067-0049/211/2/19">10.1088/0067-0049/211/2/19</a>.
+			</li>
+			<li>
+			  O. Hahn and T. Abel, “Multi-scale initial conditions for cosmological simulations,” Monthly Notices of the Royal Astronomical Society, vol. 415, no. 3, pp. 2101–2121, Aug. 2011, doi: <a href="https://doi.org/10.1111/j.1365-2966.2011.18820.x">j.1365-2966.2011.18820.x</a>.
+			</li>
+			<li>
+			  T. Gamblin et al., “The Spack package manager: bringing order to HPC software chaos,” in Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis, New York, NY, USA, Nov. 2015, pp. 1–12. doi: <a href="https://doi.org/10.1145/2807591.2807623">10.1145/2807591.2807623</a>.
+			</li>
+		  </ul>
+		</section>
+	  </div>
+	</div>
 
-		<script src="dist/reveal.js"></script>
-		<script src="plugin/notes/notes.js"></script>
-		<script src="plugin/markdown/markdown.js"></script>
-		<script src="plugin/highlight/highlight.js"></script>
-		<script>
-			// More info about initialization & config:
-			// - https://revealjs.com/initialization/
-			// - https://revealjs.com/config/
-			Reveal.initialize({
-				hash: true,
+	<script src="dist/reveal.js"></script>
+	<script src="plugin/notes/notes.js"></script>
+	<script src="plugin/markdown/markdown.js"></script>
+	<script src="plugin/highlight/highlight.js"></script>
+	<script src="plugin/math/math.js"></script>
+	<script src="bower_components/reveal.js-menu/menu.js"></script>
+	<script>
+	  // More info about initialization & config:
+	  // - https://revealjs.com/initialization/
+	  // - https://revealjs.com/config/
+	  Reveal.initialize({
+		  hash: true,
 
-				// Learn about plugins: https://revealjs.com/plugins/
-				plugins: [ RevealMarkdown, RevealHighlight, RevealNotes ]
-			});
-		</script>
-	</body>
+		  // Learn about plugins: https://revealjs.com/plugins/
+		  plugins: [
+			  RevealMarkdown,
+			  RevealHighlight,
+			  RevealNotes,
+			  RevealMath.KaTeX,
+			  RevealMenu,
+		  ],
+	  });
+	</script>
+  </body>
 </html>
