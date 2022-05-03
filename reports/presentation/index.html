@@ -178,7 +178,47 @@
 		  <!-- 	<p><blockquote>What has been will be again; there is nothing new under the sun. &mdash;Ecclesiastes 1:9</blockquote></p> -->
 		  <!-- </section> -->
 		<section data-auto-animate>
-		  <h3>GANs</h3>
+		  <h3>Neural Netorks (NNs)</h3>
+		  <p>Approximate high-dimensional non-linear functions</p>
+		</section>
+		<section data-auto-animate>
+		  <h3>Neural Netorks (NNs)</h3>
+		  <p>Approximate high-dimensional non-linear functions</p>
+		  <p>Don't know how they work</p>
+		</section>
+		<section data-auto-animate>
+		  <h3>Neural Netorks (NNs)</h3>
+		  <p>Approximate high-dimensional non-linear functions</p>
+		  <p>Don't know how they work</p>
+		  <p>Convolutional layers (<a href="https://www.morganclaypool.com/doi/10.2200/S00822ED1V01Y201712COV015">Khan et al. 2018</a>)</p>
+		  <figure>
+			<img src="assets/convolutional-layer.png" style="height: 50vh"/>
+			<figcaption>
+			  <a class="img-source" href="https://www.researchgate.net/figure/Outline-of-the-convolutional-layer_fig1_323792694">source</a>
+			</figcaption>
+		  </figure>
+		</section>
+		<section data-auto-animate>
+		  <h3>Neural Netorks (NN)</h3>
+		  <p>Approximate high-dimensional non-linear functions</p>
+		  <p>Don't know how they work</p>
+		  <p>Convolutional layers (<a href="https://www.morganclaypool.com/doi/10.2200/S00822ED1V01Y201712COV015">Khan et al. 2018</a>)</p>
+		  <p>U-net (<a href="http://arxiv.org/abs/2111.06393">Schaurecker et al. 2021</a>)</p>
+		  <figure>
+			<img src="assets/unet.png" style="height: 50vh"/>
+			<figcaption>
+			  <a class="img-source" href="http://arxiv.org/abs/2111.06393">source</a>
+			</figcaption>
+		  </figure>
+		</section>
+		<section data-auto-animate>
+		  <h3>Neural Netorks (NN)</h3>
+		  <p>Approximate high-dimensional non-linear functions</p>
+		  <p>Convolutional layers (<a href="https://www.morganclaypool.com/doi/10.2200/S00822ED1V01Y201712COV015">Khan et al. 2018</a>)</p>
+		  <p>U-net (<a href="http://arxiv.org/abs/2111.06393">Schaurecker et al. 2021</a>)</p>
+		</section>
+		<section data-auto-animate>
+		  <h3>Generative Adversarial Networks (GAN)</h3>
 		  <a href="https://proceedings.neurips.cc/paper/2014/hash/5ca3e9b122f61f8f06494c97b1afccf3-Abstract.html">Goodfellow et al. 2014</a>
 		  <figure>
 			<img src="assets/gan.png" style="height: 70vh"/>
@@ -190,16 +230,54 @@
 		<section>
 		  <span class="menu-title" style="display: none;">Simulation workflow</span>
 		  <figure>
-			<img src="assets/workflow.png" style="height: 99vh"/>
+			<img src="assets/workflow.svg" style="height: 99vh"/>
 		  </figure>
 		</section>
 		<section>
 		  <h3>Tools</h3>
 		  <ul>
-			<li>Enzo: AMR cosmological sim (<a href="https://doi.org/10.1088/0067-0049/211/2/19">Bryan et al. 2014</a>)</li>
-			<li>MUSIC: iniital conditions generator (<a href="https://arxiv.org/abs/1103.6031">Hahn and Abel 2011</a>)</li>
-			<li>Spack: Package manager (<a href="https://doi.org/10.1145/2807591.2807623">Gamblin et al. 2015</a>)</li>
+			<li class="fragment">Reproduce <a href="http://arxiv.org/abs/2111.06393">Schaurecker et al. 2021</a>, last revised Apr 2022</li>
+			<li class="fragment">Illustris: cosmological sim data (<a href="https://doi.org/10.1093/mnras/stu1536">Vogelsberger 2014</a>)</li>
+			<li class="fragment">Enzo: AMR cosmological sim (<a href="https://doi.org/10.1088/0067-0049/211/2/19">Bryan et al. 2014</a>)</li>
+			<li class="fragment">MUSIC: iniital conditions generator (<a href="https://arxiv.org/abs/1103.6031">Hahn and Abel 2011</a>)</li>
+			<li class="fragment">Spack: Package manager (<a href="https://doi.org/10.1145/2807591.2807623">Gamblin et al. 2015</a>)</li>
 		  </ul>
+		</section>
+		<section data-auto-animate>
+		  <h3>Simulation details</h3>
+		  <p>Dark matter only</p>
+		</section>
+		<section data-auto-animate>
+		  <h3>Simulation details</h3>
+		  <p>Dark matter only</p>
+		  <p>AMR Hydro</p>
+		  <div>
+			\[\mathbf{F}\left(\begin{array}{c} \rho \\ \rho \mathbf{v} \\ \rho E \end{array}\right) = \left(\begin{array}{c} \rho \mathbf{v} \\ \rho \mathbf{v} \mathbf{v}^T + P + \frac{B^2}{2a} - \frac{\mathbf{B} \mathbf{B}}{a} \\ (\rho E + P + \frac{B^2}{2a}) \mathbf{v} - \frac{1}{a} \mathbf{B}(\mathbf{B} \cdot \mathbf{v}) \\ \end{array}\right)\]
+		  </div>
+		  <p><a href="https://doi.org/10.1088/0067-0049/211/2/19">Bryan et al. 2014</a></p>
+		</section>
+		<section data-auto-animate>
+		  <h3>Simulation details</h3>
+		  <p>Dark matter only</p>
+		  <p>AMR Hydro</p>
+		  <p>Tree-based N-body</p>
+		  <div>
+			\(\nabla^2 \phi = \frac{4 \pi G}{a} \rho_{\mathrm{total}} - \rho_0\)
+		  </div>
+		  <p><a href="https://doi.org/10.1088/0067-0049/211/2/19">Bryan et al. 2014</a></p>
+		</section>
+		<section data-auto-animate>
+		  <h3>Simulation details</h3>
+		  <p>Dark matter only</p>
+		  <p>AMR Hydro</p>
+		  <p>Tree-based N-body</p>
+		  <div>
+			Cosmological expansion
+		  </div>
+		  <div>
+			\(\frac{\partial \mathbf{U}}{\partial t} + \frac{1}{a} \nabla \cdot \mathbf{F} = \mathbf{W}\)
+		  </div>
+		  <p><a href="https://doi.org/10.1088/0067-0049/211/2/19">Bryan et al. 2014</a></p>
 		</section>
 		<section>
 		  <h3>Simulation</h3>
@@ -208,8 +286,68 @@
 			<img src="assets/sim-1.png" style="width: 48%"/>
 		  </figure>
 		</section>
-		<section>
-		  Metrics
+		<section data-auto-animate>
+		  <h3>Lessons Learned</h3>
+		  <p>Software environment is tricky</p>
+		  <ul>
+			<li class="fragment">My peers agree</li>
+			<li class="fragment">Package managers</li>
+			<li class="fragment">Containers</li>
+			<li class="fragment">CUDA and hw-specific sw is still a pain</li>
+		  </ul>
+		</section>
+		<section data-auto-animate>
+		  <h3>Lessons Learned</h3>
+		  <p>Software environment is tricky</p>
+		  <p>Engineer for reproducibility</p>
+		  <ul>
+			<li class="fragment">Hard-coded paths &rarr; derive paths programatically </li>
+			<li class="fragment">Parameters mixed with code &rarr; separate parameters</li>
+			<li class="fragment">Reuse by copy/paste &rarr; use packages</li>
+			
+		  </ul>
+		</section>
+		<section data-auto-animate>
+			<pre>
+			  <code data-trim data-noescape>
+"24qve3s3xrhntqtjs3c2d7364ahclgif": {
+  "name": "hdf5",
+  "version": "1.12.1",
+  "compiler": {
+    "name": "gcc",
+    "version": "7.2.0",
+  },
+  ...
+}
+			  </code>
+			</pre>
+		</section>
+		<section data-auto-animate>
+		  <h3>Lessons Learned</h3>
+		  <p>Software environment is tricky</p>
+		  <p>Engineer for reproducibility</p>
+		  <p>Pay it forward to the community</p>
+		  <ul>
+			<li class="fragment">Got involved with Spack!</li>
+			<li class="fragment">Contributed <a href="https://github.com/spack/spack/pull/30147">MUSIC package</a></li>
+			<li class="fragment">Fixed yt and numpy</li>
+			<li class="fragment">Keep <a href="https://github.com/charmoniumQ/astrophysics-project">my work public</a></li>
+		  </ul>
+		</section>
+		<section data-auto-animate>
+			<pre>
+			  <code data-trim data-noescape>
+class Music(CMakePackage):
+    depends_on("fftw")
+    depends_on("gsl")
+    depends_on("hdf5", when="+hdf5")
+
+    def install(self, spec, prefix):
+        music_exe = os.path.join(self.build_directory, "MUSIC")
+        set_executable(music_exe)
+        mkdirp(prefix.bin)
+			  </code>
+			</pre>
 		</section>
 		<section>
 		  <h3>Bibliogrpahy</h3>
@@ -231,6 +369,15 @@
 			</li>
 			<li>
 			  T. Gamblin et al., “The Spack package manager: bringing order to HPC software chaos,” in Proceedings of the International Conference for High Performance Computing, Networking, Storage and Analysis, New York, NY, USA, Nov. 2015, pp. 1–12. doi: <a href="https://doi.org/10.1145/2807591.2807623">10.1145/2807591.2807623</a>.
+			</li>
+			<li>
+			  M. Vogelsberger et al., “Introducing the Illustris Project: simulating the coevolution of dark and visible matter in the Universe,” Monthly Notices of the Royal Astronomical Society, vol. 444, no. 2, pp. 1518–1547, Oct. 2014, doi: 10.1093/mnras/stu1536.
+			</li>
+			<li>
+			  D. Schaurecker, Y. Li, J. Tinker, S. Ho, and A. Refregier, “Super-resolving Dark Matter Halos using Generative Deep Learning,” arXiv:2111.06393 [astro-ph], Nov. 2021, Accessed: Apr. 11, 2022. [Online]. Available: http://arxiv.org/abs/2111.06393
+			</li>
+			<li>
+			  S. Khan, H. Rahmani, S. A. A. Shah, and M. Bennamoun, “A Guide to Convolutional Neural Networks for Computer Vision,” Synthesis Lectures on Computer Vision, vol. 8, no. 1, pp. 1–207, Feb. 2018, doi: 10.2200/S00822ED1V01Y201712COV015.
 			</li>
 		  </ul>
 		</section>
