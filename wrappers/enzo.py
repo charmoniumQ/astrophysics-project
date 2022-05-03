@@ -1,7 +1,7 @@
 import asyncio
 import re
 from pathlib import Path
-from typing import Any, Mapping, Union, Hashable
+from typing import Any, Hashable, Mapping, Union
 
 import charmonium.time_block as ch_time_block
 import invoke  # type: ignore
@@ -84,11 +84,12 @@ async def async_enzo(
                 stderr=stderr,
             )
         )
-        while not job_future.done() and not stdout.exists():
-            await asyncio.sleep(1)
+        while not job_future.done() and not stderr.exists():
+            await asyncio.sleep(5)
 
     z_line = re.compile("z = (\d+(?:.\d+)?)")
     last_z = float(zstart)
+    await asyncio.sleep(5)
     with ch_time_block.ctx("enzo"):
         with tqdm(total=zstart, desc="z") as progress_bar:
             while not job_future.done():

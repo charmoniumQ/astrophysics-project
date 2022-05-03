@@ -2,12 +2,12 @@ from __future__ import annotations
 
 import fnmatch
 import io
-import shutil
 import secrets
+import shutil
 import tempfile
 import warnings
 from pathlib import Path
-from typing import Generator, Iterable, Union, Optional, NoReturn, cast
+from typing import Generator, Iterable, NoReturn, Optional, Union, cast
 
 import invoke  # type: ignore
 
@@ -163,6 +163,8 @@ class FabricPath:
             self.runner,
         )
 
-    def __eq__(self, other: PathLike) -> bool:
-        other2 = FabricPath(other)
-        return self.runner == other2.runner and self.path == other2.path
+    def __eq__(self, other: object) -> bool:
+        if isinstance(other, (str, Path, FabricPath)):
+            other2 = FabricPath(other)
+            return self.runner == other2.runner and self.path == other2.path
+        return False

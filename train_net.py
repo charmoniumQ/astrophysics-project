@@ -1,5 +1,5 @@
-from tensorflow import keras
 from keras_unet.models import vanilla_unet
+from tensorflow import keras
 
 
 def main(voxels_per_side: int, padding: int):

@@ -1,18 +1,16 @@
 import itertools
 import os
 from pathlib import Path
-from typing import Mapping, Union, Sequence, cast
+from typing import Mapping, Sequence, Union, cast
 
 import charmonium.time_block as ch_time_block
 import invoke  # type: ignore
 
 from util.fabric_pathlib import FabricPath
 
-from .enzo import (
-    ParamsType as EnzoParamsType,
-    parse_params as enzo_parse_params,
-    format_params as enzo_format_params,
-)
+from .enzo import ParamsType as EnzoParamsType
+from .enzo import format_params as enzo_format_params
+from .enzo import parse_params as enzo_parse_params
 
 ValueType = Union[int, float, str, bool, Path]
 

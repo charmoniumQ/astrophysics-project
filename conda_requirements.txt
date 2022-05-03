@@ -1,0 +1,5 @@
+~/miniconda3/bin/conda install -c conda-forge yt=4.0.3 matplotlib scipy numpy tqdm dask mpi4py mypy black tqdm isort pytorch cudatoolkit fabric h5py
+~/miniconda3/bin/conda run pip install charmonium.time_block tqdm-stubs
+
+conda env remove main3
+conda env create --name main3 --file environment.yaml
