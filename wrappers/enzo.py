@@ -1,7 +1,9 @@
 import asyncio
 import re
 from pathlib import Path
+import sys
 from typing import Any, Hashable, Mapping, Union
+import warnings
 
 import charmonium.time_block as ch_time_block
 import invoke  # type: ignore
@@ -13,6 +15,10 @@ from util.util import strhash
 
 ValueType = Union[int, float, str, bool, Path]
 ParamsType = Mapping[str, ValueType]
+
+
+class EnzoWarning(UserWarning):
+    pass
 
 
 def parse_params(enzo_params: str) -> ParamsType:
@@ -103,3 +109,5 @@ async def async_enzo(
                 await asyncio.sleep(1)
 
         job = await job_future
+    for match in re.finditer("(?i)warning(?:.+\n)*", job.read_stderr()):
+        warnings.warn(match.group(0), EnzoWarning)

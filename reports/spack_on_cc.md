@@ -50,3 +50,5 @@
     concretization: together
     # other stuff
   ```
+
+- It takes about 3 seconds to activate `spack/share/spack/setup-env.sh` and about 10 seconds to activate my environment. This would unneccessarily delay my login times when I don't need Spack (e.g. just moving files). Therefore, I put these commands `spack_profile` instead of `.bash_profile`.

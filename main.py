@@ -33,8 +33,8 @@ from wrappers.music import get_stored_output as music_get_stored_output
 
 @ch_time_block.decor()
 def main(
-    zstart: int = 128,
-    resolutions: Mapping[str, int] = {"low": 4, "high": 6},
+    zstart: int = 32,
+    resolutions: Mapping[str, int] = {"low": 5, "high": 6},
     enzo_boxes_per_task: int = 64 ** 3,
     cluster: invoke.Runner = fabric.Connection("cluster"),
     data_dir: Path = Path("/scratch/users/grayson5/data"),
@@ -42,11 +42,11 @@ def main(
     spack_env: str = "main4",
     conda_env: str = "main3",
     slurm_partition: str = "eng-instruction",
-    voxels_per_side: int = 64,
-    padding: int = 24,
-    dt_data_dump: int = 5,
+    voxels_per_side: int = 32,
+    padding: int = 12,
+    dt_data_dump: int = 0,
     plot_cosmology: bool = True,
-    do_eval: bool = False,
+    redshift_data_dumps: int = 4,
 ) -> None:
 
     script_dir = Path(__file__).parent
@@ -57,6 +57,8 @@ def main(
     with cluster:
         data_dir = FabricPath(data_dir, cluster).cast()
 
+        output_dir = data_dir / "output"
+
         # Combine MUSIC params with override params.
         music_params = yaml.safe_load(
             ((script_dir / "params/music.yaml").read_text())
@@ -64,12 +66,11 @@ def main(
         music_params["setup"]["zstart"] = zstart
         music_params["setup"]["levelmin"] = resolutions["high"]
         music_params["setup"]["levelmax"] = resolutions["high"]
-        for level in range(resolutions["high"]):
+        for level in range(1, 1 + resolutions["high"]):
             music_params["random"][f"seed[level]"] = random.randint(0, 9999)
 
         # Run MUSIC if data does not already exist for this config.
-        key = "{:016x}".format(determ_hash(freeze(music_params)))
-        music_output_dir = data_dir / "music" / key
+        music_output_dir = data_dir / "music" / "{:016x}".format(determ_hash(freeze(music_params)))
         if not music_output_dir.exists():
             with cluster.prefix(spack_prefix):
                 wrappers.music(
@@ -79,38 +80,40 @@ def main(
                 )
 
         # These are the files that MUSIC creates.
-        generated_enzo_params, enzo_paths = music_get_stored_output(
-            music_output_dir
-        )
-        override_enzo_params = yaml.safe_load(
-            (script_dir / "params/enzo.yaml").read_text()
-        )
+        generated_enzo_params, enzo_paths = music_get_stored_output(music_output_dir)
+        override_enzo_params = yaml.safe_load((script_dir / "params/enzo.yaml").read_text())
+        enzo_params: Mapping[str, EnzoValueType] = {
+            **generated_enzo_params,
+            **override_enzo_params,
+            **{
+                f"CosmologyOutputRedshift[{i + 1}]": zstart / 2**i
+                for i in range(redshift_data_dumps - 1)
+            },
+            f"CosmologyOutputRedshift[{redshift_data_dumps}]": 0.0,
+            "dtDataDump": dt_data_dump,
+        }
+
+        nn_key = "{:016x}".format(determ_hash(freeze((enzo_params, resolutions))))
+        nn_data_dir = data_dir / "nn" / nn_key
 
         for (resolution_str, resolution), is_train in itertools.product(
-            resolutions.items(), ([True, False] if do_eval else [True])
+            resolutions.items(), [True, False]
         ):
 
             # Combine generated Enzo params with override params
-            cosmology_animation = is_train and resolution_str == "high"
-            if cosmology_animation:
-                print("Doing cosmology animation")
-            enzo_params: dict[str, EnzoValueType] = {
-                **generated_enzo_params,
-                **override_enzo_params,
+            resolution_enzo_params = {
+                **enzo_params,
                 "TopGridDimensions": " ".join(map(str, 3 * (2**resolution,))),
                 "MaximumRefinementLevel": resolution,
                 "MaximumGravityRefinementLevel": resolution,
                 "MaximumParticleRefinementLevel": resolution,
-                "CosmologyOutputRedshift[10]": 0.0,
-                "dtDataDump": dt_data_dump if cosmology_animation else 0,
             }
 
             # Run Enzo if the data does not already exist for this config.
-            key = "{:016x}".format(
-                determ_hash(freeze(music_params)) ^ determ_hash(freeze(enzo_params))
+            enzo_key = "{:016x}".format(
+                determ_hash(freeze(resolution_enzo_params))
             )
-            # This shouldn't affect the hash
-            enzo_output_dir = data_dir / "enzo" / key
+            enzo_output_dir = data_dir / "enzo" / enzo_key
             if not enzo_output_dir.exists():
                 # Copy initial conditions over.
                 enzo_output_dir.mkdir(parents=True)
@@ -119,26 +122,24 @@ def main(
                 with cluster.prefix(spack_prefix):
                     wrappers.enzo(
                         cluster=cluster,
-                        enzo_params=enzo_params,
+                        enzo_params=resolution_enzo_params,
                         output_dir=enzo_output_dir,
                         ntasks=max(
                             1, (2 ** resolution) ** 3 // enzo_boxes_per_task
                         ),
                         slurm_partition=slurm_partition,
                         zstart=zstart,
-                        key=key,
+                        key=enzo_key,
                     )
-            print(("train" if is_train else "test"), resolution_str, resolution, enzo_output_dir)
             nn_class_data_dir = (
-                data_dir / "nn" / ("train" if is_train else "test") / resolution_str
+                nn_data_dir / ("train" if is_train else "test") / resolution_str
             )
             nn_class_data_dir.mkdir(parents=True, exist_ok=True)
-            if (nn_class_data_dir / "raw").exists() and (
-                nn_class_data_dir / "raw"
-            ).readlink() != enzo_output_dir:
-                (nn_class_data_dir / "raw").unlink()
-            if not (nn_class_data_dir / "raw").exists():
-                (nn_class_data_dir / "raw").symlink_to(enzo_output_dir)
+            print(("train" if is_train else "test"), resolution_str, resolution, enzo_output_dir, nn_class_data_dir)
+            raw_dir = (nn_class_data_dir / "raw")
+            if raw_dir.exists():
+                raw_dir.unlink()
+            raw_dir.symlink_to(enzo_output_dir)
 
         # Run chop_data.py on the data.
         chop_data_script = data_dir / "chop_data.py"
@@ -156,47 +157,57 @@ def main(
                             "--no-capture-output",
                             "python",
                             chop_data_script,
-                            data_dir / "nn",
+                            nn_data_dir,
                             voxels_per_side,
                             padding,
                         ],
                     )
                 ),
             )
-        cosmology_dir = script_dir / "cosmology"
-        if not cosmology_dir.exists():
-            cosmology_dir.mkdir(exist_ok=True)
-            FabricPath.copytree(
-                data_dir / "nn/train/high/cosmology/", cosmology_dir
-            )
 
         map2map_dir = data_dir / "map2map"
 
+        default_map2map_params = yaml.safe_load((script_dir / "params/map2map.yaml").read_text())
         map2map_params = {
             "train-in-patterns": f"{data_dir!s}/nn/train/low/chopped/*.npy",
             "train-tgt-patterns": f"{data_dir!s}/nn/train/high/chopped/*.npy",
-            "model": "G",
-            "adv-model": "D",
-            "cgan": True,
-            "percentile": 1,
-            # "adv-rl-reg-interval": 16,
-            # "lr": 5e-5,
-            # "adv-lr": 1e-5,
-            "batches": 1,
-            "loader-workers": 4,
-            "epochs": 5,
-            "seed": 42,
-            "adv-start": 1,
-            # "incr-adv-lr": 1,
-            # "randnumber": random.randint(0, 9999),
-            "optimizer-args": '{\\"betas\\": [0., 0.9], \\"weight_decay\\": 1e-4}',
-            "optimizer": "AdamW",
-            "augment": True,
+            **default_map2map_params,
         }
         with ch_time_block.ctx("map2map"):
             pass
             # map2map(cluster, conda_env, map2map_params)
 
+        join_data_script = data_dir / "join_data.py"
+        FabricPath.copy(script_dir / "join_data.py", join_data_script)
+        with ch_time_block.ctx("join_data"):
+            cluster.run(
+                " ".join(
+                    map(
+                        str,
+                        [
+                            "conda",
+                            "run",
+                            "--name",
+                            conda_env,
+                            "--no-capture-output",
+                            "python",
+                            join_data_script,
+                            nn_data_dir / f"test/low/raw/RD{redshift_data_dumps:04d}/RedshiftOutput{redshift_data_dumps:04d}",
+                            nn_data_dir / "test/low/chopped",
+                            nn_data_dir / "test/low/chopped",
+                            nn_data_dir / "test/high/chopped",
+                            output_dir,
+                            padding,
+                        ],
+                    )
+                ),
+            )
+
+        (output_dir / "high").mkdir(exist_ok=True)
+        (output_dir / "low").mkdir(exist_ok=True)
+        FabricPath.copytree(nn_data_dir / "test/high/plots", output_dir / "high")
+        FabricPath.copytree(nn_data_dir / "test/low/plots", output_dir / "low")
+        FabricPath.copytree(output_dir, script_dir / "output")
 
 if __name__ == "__main__":
     main()

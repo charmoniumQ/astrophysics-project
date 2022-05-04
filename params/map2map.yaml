@@ -1,0 +1,16 @@
+model: G
+model: D
+cgan: yes
+percentile: 1
+# adv-rl-reg-interval: 16
+# lr: 5e-5
+# adv-lr: 1e-5
+batches: 1
+loader-workers: 4
+epochs: 5
+seed: 0
+adv-start: 1
+# incr-adv-lr: 1
+optimizer-args: '{\"betas\": [0., 0.9], \"weight_decay\": 1e-4}'
+optimizer: AdamW
+augment: yes

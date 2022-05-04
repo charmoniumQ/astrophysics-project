@@ -1,0 +1,49 @@
+\documentclass{article}
+
+\XeTeXdefaultencoding "Latin1"
+\usepackage[printonlyused]{acronym}
+\XeTeXdefaultencoding "UTF8"
+
+\usepackage[utf8]{inputenc}
+\usepackage[sc]{mathpazo}
+\usepackage{tgpagella}
+\linespread{1.05} % Palladio needs more leading (space between lines)
+\usepackage[T1]{fontenc} % Use 8-bit encoding that has 256 glyphs
+\usepackage{microtype} % Slightly tweak font spacing for aesthetics
+\usepackage[english]{babel} % Language hyphenation and typographical rules
+\usepackage[colorlinks=true]{hyperref}
+\usepackage{physics}
+\usepackage{cleveref}
+\usepackage{graphicx}
+\usepackage{cancel}
+\usepackage{xcolor}
+%% \usepackage{minted}
+% https://github.com/tectonic-typesetting/tectonic/issues/689
+% https://github.com/gpoore/minted/issues/18
+\usepackage{amsmath}
+\usepackage{booktabs}
+
+\usepackage{biblatex}
+\addbibresource{main.bib}
+
+\newcommand{\mytitle}{Final Results}
+
+\usepackage{fancyhdr}
+\pagestyle{fancy} % All pages have headers and footers
+\fancyhead[C]{\mytitle}
+\fancyhead[R]{\thepage}
+\fancyhead[L]{}
+\fancyfoot[C]{}
+\fancyfoot[R]{}
+\fancyfoot[L]{}
+
+\newcommand\hcancel[2][black]{\setbox0=\hbox{$#2$}%
+\rlap{\raisebox{.45\ht0}{\textcolor{#1}{\rule{\wd0}{1pt}}}}#2} 
+\setlength{\parindent}{0pt}
+\setlength{\parskip}{12pt}
+
+\title{\mytitle}
+\author{Samuel Grayson \\ \texttt{grayson5}}
+
+\begin{document}
+\maketitle
