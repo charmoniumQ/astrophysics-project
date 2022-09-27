@@ -49,4 +49,12 @@ This approach to simulating cosmology relies on standard assumptions in \(\Lambd
 
 I have attempted to make my code as reproducible as possible.
 
-\section{Lessons Learned}
+\begin{enumerate}
+\item All of my source code is available here\footnote{\url{https://github.com/charmoniumQ/astrophysics-project}}, with a full revision history stored in Git.
+\item I use the Spack package manager \cite{gamblin_spack_2015} to manage binary dependencies. Spack creates a `lockfile' which contains an exact specification of the source code and instructions to compile for every package. One can replicate my environment with \verb+spack env create myenv spack.lock+.
+\item I use the Conda package manager to manage Python dependencies. Like Spack, this makes the software environment reproducible by others with \verb+conda env create --name myenv --file environment.yaml+.
+\item I wrote detailed instructions in the \verb+README.md+ to set up my software.
+\item I combined the complete workflow (simulation parameters all the way to grpahs) into a single script. However, the script knows to skip a task if the data already exists. This way, there are fewer steps, and the user doesn't need to manually run tasks of send the output of one task as the input to the next. Furthermore, the script can use ephemeral storage, such as \verb+/scratch+ on the Campus Cluster; If data gets deleted, it will just regenerate it.
+\item I have each task is a function that gets called by the main script. This makes my code reusable in other tasks.
+\item I wrote a library for running Slurm tasks on a remote machine and manipulating files on a remote machine. These can be resued in other tasks as well.
+\end{enumerate}

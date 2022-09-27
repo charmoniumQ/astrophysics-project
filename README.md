@@ -15,6 +15,7 @@ To set up the remote machine (should be capable of Slurm):
 
 ```sh
 remote$ # Install Spack on the remote
+remote$ # See my notes in reports/spack_on_cc.md for details on the UIUC Campus Cluster.
 remote$ git clone -c feature.manyFiles=true https://github.com/spack/spack.git
 
 remote$ # Copy spack.lock to the remote

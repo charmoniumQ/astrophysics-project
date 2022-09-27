@@ -1,0 +1,3 @@
+- Not all Numpy. Need yt for AMR analyses.
+- Checkpointing
+- Learn which Python functions can be GPU accelerated.

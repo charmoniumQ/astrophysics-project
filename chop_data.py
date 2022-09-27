@@ -66,23 +66,18 @@ def chop_frame(
 
     dx = ds.index.get_smallest_dx()
     assert ds.domain_dimensions[0] == ds.domain_dimensions[1] == ds.domain_dimensions[2]
-    domain_length_pixels = ds.refine_by ** ds.index.max_level
-    block_length_pixels = (voxels_per_side + (padding * 2 if is_train else 0),) * 3
-    domain_length_blocks = domain_length_pixels // voxels_per_side - 2 * padding
-    print(ds.refine_by, "**" ds.index.max_level, "=", domain_length_pixels, "=", domain_length_blocks, "*", block_length_pixels)
+    domain_length_voxels = ds.domain_dimensions[0] * ds.refine_by ** ds.index.max_level
+    block_length_voxels = (voxels_per_side + (padding * 2 if is_train else 0),) * 3
+    domain_length_blocks = domain_length_voxels // voxels_per_side - 2 * padding
+    print(f"{ds.refine_by} ** {ds.index.max_level} = {domain_length_voxels} = {domain_length_blocks} * {block_length_voxels}")
     block_idxs = itertools.product(range(domain_length_blocks), repeat=3)
-    for i, j, k in block_idxs:
-        print(i, j, k)
-        print((numpy.array([i, j, k]) * voxels_per_side + (0 if is_train else padding)) * dx)
+    for i, j, k in tqdm(block_idxs, total=domain_length_blocks**3):
         grid = ds.covering_grid(
             level=ds.index.max_level,
             left_edge=(numpy.array([i, j, k]) * voxels_per_side + (0 if is_train else padding)) * dx,
-            dims=block_length_pixels,
+            dims=block_length_voxels,
             fields=[dm_field],
         )
-        print(grid)
-        print(grid[dm_field].shape)
-        print(grid[dm_field][:5, :5, :5])
         numpy.save(output_dir / f"dm_{i:04d}_{j:04d}_{k:04d}.npy", grid[dm_field])
 
     # dask.bag.from_sequence( # type: ignore
@@ -107,20 +102,27 @@ def chop_nn_class_dir(
     plots_dir = nn_class_data_dir / "plots"
     chopped_dir = nn_class_data_dir / "chopped"
 
+    with charmonium.time_block.ctx("Load data"):
+        if not plots_dir.exists() or not chopped_dir.exists():
+            dss = yt.load(str(raw_dir / "RD????/RedshiftOutput????"))
+
     with charmonium.time_block.ctx("Plotting"):
         if not plots_dir.exists():
             plots_dir.mkdir()
             # yt.load(str(raw_dir / "DD????/data????"))
-            dss = yt.load(str(raw_dir / "RD????/RedshiftOutput????"))
             plot_cosmology(dss, plots_dir)
 
     with charmonium.time_block.ctx("Chopping"):
         if not chopped_dir.exists():
             print("chopping")
             chopped_dir.mkdir()
-            chop_frame(
-                dss[-1], chopped_dir, voxels_per_side, padding, is_train
-            )
+            try:
+                chop_frame(
+                    dss[-1], chopped_dir, voxels_per_side, padding, is_train
+                )
+            except Exception as e:
+                shutil.rmtree(chopped_dir)
+                raise e
 
 
 if __name__ == "__main__":

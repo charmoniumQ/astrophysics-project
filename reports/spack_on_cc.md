@@ -1,7 +1,5 @@
 # Using Spack on the Campus Cluster
 
-- 
-
 - It is quite easy for Spack packages to surpass the 5GiB quota on one's home directory. Consider adding `install_tree` in `~/.spack/config.yaml` to `/scratch/users/$user/opt` (non-persistent) or `/project/$PROJECT/opt` (persistent).
 
   ```yaml
@@ -29,7 +27,11 @@
   # other stuff here
   ```
 
-- Alternatively, you can try installing a new compiler `srun --ntasks=8 --time=01:00:00 --partition=$PARTITION --pty spack install gcc@11.2`, which will automatically add the new compiler to your `~/.spack/linux/compilers.yaml`. I'm not sure how Spack decides what compiler to use; you may have to add `%gcc@7.2.0` to force Spack to use the newer `gcc`.
+- Alternatively, you can try installing a new compiler `srun --ntasks=8 --time=01:00:00 --partition=$PARTITION --pty spack install gcc@11.2`, which will automatically add the new compiler to your `~/.spack/linux/compilers.yaml`. I'm not sure how Spack decides what compiler to use; you may have to add `%gcc@7.2.0` to the package (e.g. `py-numpy@1.14.0%gcc@7.2.0`) force Spack to use the newer `gcc`.
+
+- I was able to use Spack's MPI implementations without a problem. However, if you experience problems with them, you can use the Campus Cluster's managed implementation by adding it to [`packages.yaml`][1]
+
+[1]: https://spack.readthedocs.io/en/latest/build_settings.html#build-settings
 
 - Runing `spack install` on the head node will likely take too long and get your process killed. Environment commands such as `spack env activate`, `spack add`, and `spack concretize` should be fine.
 

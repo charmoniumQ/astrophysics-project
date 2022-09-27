@@ -34,7 +34,7 @@ from wrappers.music import get_stored_output as music_get_stored_output
 @ch_time_block.decor()
 def main(
     zstart: int = 32,
-    resolutions: Mapping[str, int] = {"low": 5, "high": 6},
+    resolutions: Mapping[str, int] = {"low": 6, "high": 6},
     enzo_boxes_per_task: int = 64 ** 3,
     cluster: invoke.Runner = fabric.Connection("cluster"),
     data_dir: Path = Path("/scratch/users/grayson5/data"),
@@ -43,7 +43,7 @@ def main(
     conda_env: str = "main3",
     slurm_partition: str = "eng-instruction",
     voxels_per_side: int = 32,
-    padding: int = 12,
+    padding: int = 4,
     dt_data_dump: int = 0,
     plot_cosmology: bool = True,
     redshift_data_dumps: int = 4,
